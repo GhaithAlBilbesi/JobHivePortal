@@ -7,14 +7,7 @@ import { Link } from "wouter";
  * Features responsive design with multi-column layout
  */
 const Footer = () => {
-  // Quick Links for the footer
-  const quickLinks = [
-    { label: "Home", path: "/" },
-    { label: "Browse Jobs", path: "/jobs" },
-    { label: "Resume Builder", path: "/resume-builder" },
-    { label: "For Employers", path: "/for-employers" },
-    { label: "Contact Us", path: "/contact" }
-  ];
+  // Quick Links section removed per user request
   
   // Job Categories for the footer
   const jobCategories = [
@@ -62,22 +55,7 @@ const Footer = () => {
             </div>
           </div>
           
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-xl font-bold mb-4">Quick Links</h4>
-            <ul className="space-y-2">
-              {quickLinks.map((link, index) => (
-                <li key={index}>
-                  <Link 
-                    href={link.path} 
-                    className="text-gray-400 hover:text-[#F6C500] transition-colors duration-200"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Quick Links section removed per user request */}
           
           {/* Job Categories */}
           <div>
