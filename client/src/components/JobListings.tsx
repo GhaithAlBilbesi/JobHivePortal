@@ -91,7 +91,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 2,
       title: "Junior Web Developer",
-      company: "HiveWorks Solutions",
+      company: "Tech Solutions Inc.",
       type: "Full-time",
       location: "Cairo, Egypt",
       schedule: "Full-time, 40 hours/week",
@@ -117,7 +117,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 4,
       title: "Graphic Design Intern",
-      company: "Creative Hive",
+      company: "Creative Design Studio",
       type: "Internship",
       location: "Remote",
       schedule: "Part-time, 25 hours/week",
