@@ -26,7 +26,7 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="relative bg-[#FFFBEA] py-12 lg:py-20 overflow-hidden pt-32" ref={heroRef}>
+    <section className="relative bg-[#F8F9FA] py-12 lg:py-20 overflow-hidden pt-32" ref={heroRef}>
       <div className="container mx-auto px-4">
         <div className="flex flex-col lg:flex-row items-center">
           {/* Left Column - Text Content */}

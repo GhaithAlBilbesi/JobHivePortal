@@ -148,7 +148,7 @@ const Header = () => {
             <div className="w-10 h-10 bg-[#F6C500] rounded-lg flex items-center justify-center mr-2">
               <i className="fas fa-briefcase text-black text-xl"></i>
             </div>
-            <span className="text-2xl font-bold">Job<span className="text-[#F6C500]">Hive</span></span>
+            <span className="text-2xl font-bold">Job<span className="text-[#F6C500]">Portal</span></span>
           </Link>
           
           {/* Mobile Menu Button */}
