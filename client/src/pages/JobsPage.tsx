@@ -54,7 +54,7 @@ const JobsPage = () => {
                     <SelectValue placeholder="All Locations" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Locations</SelectItem>
+                    <SelectItem value="all_locations">All Locations</SelectItem>
                     <SelectItem value="remote">Remote</SelectItem>
                     <SelectItem value="amman">Amman, Jordan</SelectItem>
                     <SelectItem value="cairo">Cairo, Egypt</SelectItem>
@@ -70,7 +70,7 @@ const JobsPage = () => {
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Types</SelectItem>
+                    <SelectItem value="all_types">All Types</SelectItem>
                     <SelectItem value="full-time">Full-time</SelectItem>
                     <SelectItem value="part-time">Part-time</SelectItem>
                     <SelectItem value="internship">Internship</SelectItem>
@@ -86,7 +86,7 @@ const JobsPage = () => {
                     <SelectValue placeholder="All Levels" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Levels</SelectItem>
+                    <SelectItem value="all_levels">All Levels</SelectItem>
                     <SelectItem value="entry">Entry Level</SelectItem>
                     <SelectItem value="internship">Internship</SelectItem>
                     <SelectItem value="1-2">1-2 Years</SelectItem>
