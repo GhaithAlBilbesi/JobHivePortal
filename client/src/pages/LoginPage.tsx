@@ -1,113 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { useUser } from "@/contexts/UserContext";
+import { LoginButton } from "@/components/auth/AuthButtons";
 
 /**
  * LoginPage Component
  * 
  * Standalone page for user login
- * Allows existing users to log in with their credentials
- * Features email/password login and social login options
- * Redirects users to appropriate dashboard based on role after login
+ * Uses Replit Auth for authentication
+ * Redirects users to dashboard after login
  */
 const LoginPage = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { login, isRole } = useUser();
   const [, setLocation] = useLocation();
-
-  // Form validation state
-  const [errors, setErrors] = useState({
-    email: '',
-    password: ''
-  });
 
   // Set page title
   useEffect(() => {
     document.title = "Sign In - JobHive";
   }, []);
 
-  // Validate form
-  const validateForm = () => {
-    let isValid = true;
-    const newErrors = {
-      email: '',
-      password: ''
-    };
-
-    if (!email.trim()) {
-      newErrors.email = 'Email is required';
-      isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      newErrors.email = 'Email is invalid';
-      isValid = false;
-    }
-
-    if (!password) {
-      newErrors.password = 'Password is required';
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
-  // Handle form submission
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      const success = await login(email, password);
-      
-      if (success) {
-        toast({
-          title: "Login successful",
-          description: "Welcome back to JobHive!"
-        });
-        
-        // Navigate based on role
-        if (isRole('student')) {
-          setLocation('/dashboard');
-        } else if (isRole('employer')) {
-          setLocation('/dashboard');
-        } else if (isRole('admin')) {
-          setLocation('/dashboard');
-        } else {
-          setLocation('/dashboard');
-        }
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Invalid email or password",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Login error",
-        description: "An error occurred during login",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Navigate to register page
   const goToRegister = () => {
     setLocation('/register');
+  };
+  
+  // Handle Replit login
+  const handleReplitLogin = () => {
+    window.location.href = '/api/login';
   };
 
   return (
