@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,8 +10,6 @@ import JobsPage from "@/pages/JobsPage";
 import ResumeBuilder from "@/pages/ResumeBuilder";
 import PostJob from "@/pages/PostJob";
 import Dashboard from "@/pages/Dashboard";
-import LoginPage from "@/pages/LoginPage";
-import RegisterPage from "@/pages/RegisterPage";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -19,24 +17,16 @@ import Footer from "@/components/Footer";
  * Router component that handles all application routes
  * Sets up main routes for the application, including home, jobs, resume builder, 
  * post job, and role-specific pages
- * Conditionally renders Header and Footer based on route
  */
 function Router() {
-  const [location] = useLocation();
-  
-  // Don't show header and footer on auth pages
-  const isAuthPage = location === '/login' || location === '/register';
-
   return (
     <>
-      {!isAuthPage && <Header />}
+      <Header />
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/jobs" component={JobsPage} />
         <Route path="/resume-builder" component={ResumeBuilder} />
         <Route path="/post-job" component={PostJob} />
-        <Route path="/login" component={LoginPage} />
-        <Route path="/register" component={RegisterPage} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/profile" component={() => <div className="pt-32 pb-20 min-h-screen container mx-auto px-4">
           <h1 className="text-3xl font-bold mb-6">User Profile</h1>
@@ -48,7 +38,7 @@ function Router() {
         </div>} />
         <Route component={NotFound} />
       </Switch>
-      {!isAuthPage && <Footer />}
+      <Footer />
     </>
   );
 }
