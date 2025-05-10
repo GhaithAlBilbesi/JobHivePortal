@@ -10,6 +10,14 @@ import JobsPage from "@/pages/JobsPage";
 import ResumeBuilder from "@/pages/ResumeBuilder";
 import PostJob from "@/pages/PostJob";
 import Dashboard from "@/pages/Dashboard";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import CompanyInfo from "@/pages/EmployerRegister/CompanyInfo";
+import FoundingInfo from "@/pages/EmployerRegister/FoundingInfo";
+import SocialMedia from "@/pages/EmployerRegister/SocialMedia";
+import Contact from "@/pages/EmployerRegister/Contact";
+import Complete from "@/pages/EmployerRegister/Complete";
+import StudentRegister from "@/pages/StudentRegister";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -28,6 +36,14 @@ function Router() {
         <Route path="/resume-builder" component={ResumeBuilder} />
         <Route path="/post-job" component={PostJob} />
         <Route path="/dashboard" component={Dashboard} />
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+        <Route path="/register/employer" component={CompanyInfo} />
+        <Route path="/register/employer/founding-info" component={FoundingInfo} />
+        <Route path="/register/employer/social-media" component={SocialMedia} />
+        <Route path="/register/employer/contact" component={Contact} />
+        <Route path="/register/employer/complete" component={Complete} />
+        <Route path="/register/student" component={StudentRegister} />
         <Route path="/profile" component={() => <div className="pt-32 pb-20 min-h-screen container mx-auto px-4">
           <h1 className="text-3xl font-bold mb-6">User Profile</h1>
           <p className="text-gray-600">Profile management functionality is coming soon.</p>

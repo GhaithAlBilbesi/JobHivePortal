@@ -173,16 +173,16 @@ const Header = () => {
                   <Button 
                     style={{ backgroundColor: "#F6C500", color: "#000000" }} 
                     className="rounded-full transition-colors duration-200"
-                    onClick={() => openLoginModal('login')}
+                    asChild
                   >
-                    Sign In
+                    <Link href="/login">Sign In</Link>
                   </Button>
                   <Button 
                     variant="outline" 
                     className="border-2 border-[#F6C500] text-black rounded-full hover:bg-[#FFFBEA] transition-colors duration-200"
-                    onClick={() => openLoginModal('register')}
+                    asChild
                   >
-                    Sign Up
+                    <Link href="/register">Sign Up</Link>
                   </Button>
                 </div>
               ) : (
@@ -278,16 +278,16 @@ const Header = () => {
                   <Button 
                     style={{ backgroundColor: "#F6C500", color: "#000000" }} 
                     className="rounded-full w-full transition-colors duration-200"
-                    onClick={() => openLoginModal('login')}
+                    asChild
                   >
-                    Sign In
+                    <Link href="/login">Sign In</Link>
                   </Button>
                   <Button 
                     variant="outline" 
                     className="border-2 border-[#F6C500] text-black rounded-full w-full hover:bg-[#FFFBEA] transition-colors duration-200"
-                    onClick={() => openLoginModal('register')}
+                    asChild
                   >
-                    Sign Up
+                    <Link href="/register">Sign Up</Link>
                   </Button>
                 </div>
               )}
