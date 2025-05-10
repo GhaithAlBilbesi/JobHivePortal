@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Link, useLocation } from 'wouter';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useUser } from '@/contexts/UserContext';
 import logo from '@/assets/logo.svg';
 
 /**
@@ -23,13 +24,21 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [, navigate] = useLocation();
+  const { register, isAuthenticated } = useUser();
 
   // Set page title
   useEffect(() => {
     document.title = "Create Account - JobHive";
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form
@@ -43,11 +52,28 @@ const Register = () => {
       return;
     }
     
-    // Navigate to the appropriate profile setup based on account type
-    if (accountType === 'employer') {
-      navigate('/register/employer');
-    } else {
-      navigate('/register/student');
+    // If form is valid and just registering (not proceeding to next step)
+    // then try to register the user
+    try {
+      const success = await register({
+        name: fullName,
+        email,
+        role: accountType as 'student' | 'employer'
+      }, password);
+
+      if (success) {
+        // Navigate to the appropriate profile setup based on account type
+        if (accountType === 'employer') {
+          navigate('/register/employer');
+        } else {
+          navigate('/register/student');
+        }
+      } else {
+        alert('Registration failed. This email might already be registered.');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      alert('An error occurred during registration. Please try again.');
     }
   };
 

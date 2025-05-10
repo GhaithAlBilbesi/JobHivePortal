@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Link, useLocation } from 'wouter';
+import { useUser } from '@/contexts/UserContext';
 import logo from '@/assets/logo.svg';
 
 /**
@@ -17,17 +18,37 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [, navigate] = useLocation();
+  const { login, isAuthenticated } = useUser();
 
   // Set page title
   useEffect(() => {
     document.title = "Sign In - JobHive";
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Redirect if already logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here we would normally handle authentication
-    // For now, just redirect to the homepage
-    navigate('/');
+    try {
+      // Attempt to log in with the provided credentials
+      const success = await login(email, password);
+      
+      if (success) {
+        // If login is successful, redirect to dashboard or homepage
+        navigate('/dashboard');
+      } else {
+        // If login fails, show an alert (in a real app, you'd use a toast notification)
+        alert('Invalid email or password. Please try again.');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('An error occurred during login. Please try again.');
+    }
   };
 
   return (
