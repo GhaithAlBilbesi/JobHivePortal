@@ -36,7 +36,7 @@ const Hero = () => {
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 relative">
               <span className="block">Career opportunities</span>
-              <span className="block text-[#F6C500] relative" ref={titleRef}>
+              <span className="block text-[#3B82F6] relative" ref={titleRef}>
                 for your future!
               </span>
             </h1>
@@ -47,14 +47,14 @@ const Hero = () => {
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
               <Button 
                 className="btn-pulse rounded-full"
-                style={{ backgroundColor: "#F6C500", color: "#000000" }}
+                style={{ backgroundColor: "#3B82F6", color: "#FFFFFF" }}
                 asChild
               >
                 <Link href="/jobs">Explore Jobs</Link>
               </Button>
               <Button 
                 variant="outline" 
-                className="border-2 border-[#F6C500] text-black rounded-full"
+                className="border-2 border-[#3B82F6] text-black rounded-full"
                 asChild
               >
                 <Link href="/post-job">Post a Job</Link>
@@ -76,9 +76,9 @@ const Hero = () => {
         </div>
       </div>
       
-      {/* Background Hexagon Pattern */}
+      {/* Background Grid Pattern */}
       <div className="absolute top-0 right-0 w-1/3 h-full opacity-10">
-        <div className="w-full h-full" style={{ backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4NiIgaGVpZ2h0PSIxMDAiPgogIDxwYXRoIGZpbGw9IiNGNkM1MDAiIGQ9Ik00MyAwbDQzIDI1djUwbC00MyAyNUwwIDc1VjI1eiI+PC9wYXRoPgo8L3N2Zz4=")`, backgroundRepeat: "repeat" }}></div>
+        <div className="w-full h-full" style={{ backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyBmaWxsPSIjM0I4MkY2IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgPHBhdGggZD0iTTAgMGg0MHY0MEgwVjB6TTIwIDIwaDIwdjIwSDIwVjIweiIgb3BhY2l0eT0iLjUiLz4KICAgIDxwYXRoIGQ9Ik0wIDIwaDIwdjIwSDBWMjB6TTE1IDE1aDEwdjEwSDE1VjE1eiIgb3BhY2l0eT0iLjMiLz4KICA8L2c+Cjwvc3ZnPg==")`, backgroundRepeat: "repeat" }}></div>
       </div>
     </section>
   );
