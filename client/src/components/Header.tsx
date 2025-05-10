@@ -3,7 +3,6 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { useUser } from "@/contexts/UserContext";
-import LoginModal from "./auth/LoginModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,8 +26,6 @@ const Header = () => {
   const [location] = useLocation();
   const isMobile = useMediaQuery("(max-width: 1023px)");
   const { user, isAuthenticated, logout, isRole } = useUser();
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [loginAction, setLoginAction] = useState<'login' | 'register'>('login');
 
   // Handle scroll event to shrink header
   useEffect(() => {
@@ -57,11 +54,6 @@ const Header = () => {
 
   const isActive = (path: string) => {
     return location === path ? "text-[#F6C500]" : "text-black";
-  };
-
-  const openLoginModal = (action: 'login' | 'register' = 'login') => {
-    setLoginAction(action);
-    setIsLoginModalOpen(true);
   };
 
   const handleLogout = () => {
@@ -295,13 +287,6 @@ const Header = () => {
           </nav>
         )}
       </header>
-      
-      {/* Login Modal */}
-      <LoginModal 
-        isOpen={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)}
-        action={loginAction}
-      />
     </>
   );
 };

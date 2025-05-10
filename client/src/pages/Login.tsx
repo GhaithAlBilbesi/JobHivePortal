@@ -103,6 +103,13 @@ const Login = () => {
                 Forgot password?
               </Link>
             </div>
+            
+            <div className="text-xs text-gray-500 mt-4 mb-4">
+              <p>For testing, use these credentials:</p>
+              <p>• student@jobhive.com / password123</p>
+              <p>• employer@jobhive.com / password123</p>
+              <p>• admin@jobhive.com / password123</p>
+            </div>
 
             <Button
               type="submit"
