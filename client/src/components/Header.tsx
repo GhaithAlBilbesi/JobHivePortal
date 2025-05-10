@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-mobile";
-import { useUser } from "@/contexts/UserContext";
-import LoginModal from "./auth/LoginModal";
+import { useAuth } from "@/hooks/useAuth";
+import { LoginButton, LogoutButton } from "./auth/AuthButtons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,9 +26,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [location] = useLocation();
   const isMobile = useMediaQuery("(max-width: 1023px)");
-  const { user, isAuthenticated, logout, isRole } = useUser();
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [loginAction, setLoginAction] = useState<'login' | 'register'>('login');
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   // Handle scroll event to shrink header
   useEffect(() => {
@@ -59,24 +57,12 @@ const Header = () => {
     return location === path ? "text-[#F6C500]" : "text-black";
   };
 
-  const openLoginModal = (action: 'login' | 'register' = 'login') => {
-    setLoginAction(action);
-    setIsLoginModalOpen(true);
-  };
-
-  const handleLogout = () => {
-    logout();
-  };
-
   // Get the user's initials for avatar fallback
   const getUserInitials = () => {
-    if (!user || !user.name) return "U";
-    return user.name
-      .split(" ")
-      .map(n => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
+    if (!user || !user.firstName) return "U";
+    const first = user.firstName?.charAt(0) || '';
+    const last = user.lastName?.charAt(0) || '';
+    return (first + last).toUpperCase();
   };
 
   // Determine which navigation links to show based on user role
@@ -92,51 +78,23 @@ const Header = () => {
       </>
     );
 
-    // Additional links based on roles
+    // Additional links based on authentication
     if (!isAuthenticated) {
       return commonLinks;
     }
 
-    if (isRole('student')) {
-      return (
-        <>
-          {commonLinks}
-          <Link href="/resume-builder" className={`font-medium ${isActive("/resume-builder")} hover:text-[#F6C500] transition-colors duration-200`}>
-            Resume Builder
-          </Link>
-          <Link href="/dashboard" className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] transition-colors duration-200`}>
-            Dashboard
-          </Link>
-        </>
-      );
-    }
-
-    if (isRole('employer')) {
-      return (
-        <>
-          {commonLinks}
-          <Link href="/dashboard" className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] transition-colors duration-200`}>
-            Dashboard
-          </Link>
-          <Link href="/post-job" className={`font-medium ${isActive("/post-job")} hover:text-[#F6C500] transition-colors duration-200`}>
-            Post Job
-          </Link>
-        </>
-      );
-    }
-
-    if (isRole('admin')) {
-      return (
-        <>
-          {commonLinks}
-          <Link href="/admin" className={`font-medium ${isActive("/admin")} hover:text-[#F6C500] transition-colors duration-200`}>
-            Admin Panel
-          </Link>
-        </>
-      );
-    }
-
-    return commonLinks;
+    // For authenticated users, show all links
+    return (
+      <>
+        {commonLinks}
+        <Link href="/resume-builder" className={`font-medium ${isActive("/resume-builder")} hover:text-[#F6C500] transition-colors duration-200`}>
+          Resume Builder
+        </Link>
+        <Link href="/dashboard" className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] transition-colors duration-200`}>
+          Dashboard
+        </Link>
+      </>
+    );
   };
 
   return (
@@ -170,32 +128,19 @@ const Header = () => {
               {/* Auth Buttons or User Menu */}
               {!isAuthenticated ? (
                 <div className="flex space-x-3">
-                  <Button 
-                    style={{ backgroundColor: "#F6C500", color: "#000000" }} 
-                    className="rounded-full transition-colors duration-200"
-                    onClick={() => openLoginModal('login')}
-                  >
-                    Sign In
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="border-2 border-[#F6C500] text-black rounded-full hover:bg-[#FFFBEA] transition-colors duration-200"
-                    onClick={() => openLoginModal('register')}
-                  >
-                    Sign Up
-                  </Button>
+                  <LoginButton />
                 </div>
               ) : (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button className="flex items-center space-x-2 focus:outline-none">
                       <Avatar className="h-9 w-9 border border-[#F6C500]">
-                        <AvatarImage src={user?.profilePicture} />
+                        <AvatarImage src={user?.profileImageUrl} />
                         <AvatarFallback className="bg-[#FFFBEA] text-[#F6C500]">
                           {getUserInitials()}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm font-medium">{user?.name}</span>
+                      <span className="text-sm font-medium">{user?.firstName || 'User'}</span>
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
@@ -206,8 +151,8 @@ const Header = () => {
                       <Link href="/profile">My Profile</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-pointer text-red-600" onClick={handleLogout}>
-                      Logout
+                    <DropdownMenuItem className="cursor-pointer text-red-600">
+                      <LogoutButton />
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -228,80 +173,32 @@ const Header = () => {
                 Jobs
               </Link>
               
-              {/* Conditional links based on authentication and role */}
+              {/* Conditional links based on authentication */}
               {isAuthenticated && (
                 <>
-                  {isRole('student') && (
-                    <>
-                      <Link href="/resume-builder" className={`font-medium ${isActive("/resume-builder")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
-                        Resume Builder
-                      </Link>
-                      <Link href="/dashboard" className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
-                        Dashboard
-                      </Link>
-                    </>
-                  )}
-                  
-                  {isRole('employer') && (
-                    <>
-                      <Link href="/dashboard" className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
-                        Dashboard
-                      </Link>
-                      <Link href="/post-job" className={`font-medium ${isActive("/post-job")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
-                        Post Job
-                      </Link>
-                    </>
-                  )}
-                  
-                  {isRole('admin') && (
-                    <Link href="/admin" className={`font-medium ${isActive("/admin")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
-                      Admin Panel
-                    </Link>
-                  )}
-                  
+                  <Link href="/resume-builder" className={`font-medium ${isActive("/resume-builder")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
+                    Resume Builder
+                  </Link>
+                  <Link href="/dashboard" className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
+                    Dashboard
+                  </Link>
                   <Link href="/profile" className={`font-medium ${isActive("/profile")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
                     My Profile
                   </Link>
-                  
-                  <button 
-                    onClick={handleLogout}
-                    className="font-medium text-red-600 hover:text-red-700 py-2 text-left transition-colors duration-200"
-                  >
-                    Logout
-                  </button>
+                  <LogoutButton />
                 </>
               )}
               
               {/* Auth buttons for logged out users */}
               {!isAuthenticated && (
                 <div className="flex flex-col space-y-2 pt-2">
-                  <Button 
-                    style={{ backgroundColor: "#F6C500", color: "#000000" }} 
-                    className="rounded-full w-full transition-colors duration-200"
-                    onClick={() => openLoginModal('login')}
-                  >
-                    Sign In
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="border-2 border-[#F6C500] text-black rounded-full w-full hover:bg-[#FFFBEA] transition-colors duration-200"
-                    onClick={() => openLoginModal('register')}
-                  >
-                    Sign Up
-                  </Button>
+                  <LoginButton />
                 </div>
               )}
             </div>
           </nav>
         )}
       </header>
-      
-      {/* Login Modal */}
-      <LoginModal 
-        isOpen={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)}
-        action={loginAction}
-      />
     </>
   );
 };
