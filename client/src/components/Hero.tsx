@@ -1,12 +1,14 @@
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import AnimatedBee from "./AnimatedBee";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 /**
  * Hero Component
  * 
  * Main landing banner showcasing the core value proposition
+ * Features animated bee emojis flying around the title
  * Implements a responsive design that adapts to different screen sizes
  */
 const Hero = () => {
@@ -26,7 +28,7 @@ const Hero = () => {
   }, []);
 
   return (
-    <section className="relative bg-[#F8F9FA] py-12 lg:py-20 overflow-hidden pt-32" ref={heroRef}>
+    <section className="relative bg-[#FFFBEA] py-12 lg:py-20 overflow-hidden pt-32" ref={heroRef}>
       <div className="container mx-auto px-4">
         <div className="flex flex-col lg:flex-row items-center">
           {/* Left Column - Text Content */}
@@ -35,9 +37,21 @@ const Hero = () => {
             ref={heroContentRef}
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 relative">
-              <span className="block">Career opportunities</span>
-              <span className="block text-[#3B82F6] relative" ref={titleRef}>
-                for your future!
+              <span className="block">Sweet opportunities</span>
+              <span className="block text-[#F6C500] relative" ref={titleRef}>
+                for the NewBees!
+                
+                {/* Bees flying around the title */}
+                <div className="absolute" style={{ width: '100%', height: '300%', top: '-100%', left: 0, pointerEvents: 'none' }}>
+                  <AnimatedBee style={{ position: 'absolute', top: "-50%", left: "5%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "30%", left: "25%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "80%", left: "10%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "0%", left: "60%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "60%", left: "80%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "-20%", left: "50%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "90%", left: "40%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "40%", left: "70%" }} />
+                </div>
               </span>
             </h1>
             <p className="text-lg md:text-xl text-gray-700 mb-8 max-w-xl">
@@ -47,17 +61,17 @@ const Hero = () => {
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
               <Button 
                 className="btn-pulse rounded-full"
-                style={{ backgroundColor: "#3B82F6", color: "#FFFFFF" }}
+                style={{ backgroundColor: "#F6C500", color: "#000000" }}
                 asChild
               >
                 <Link href="/jobs">Explore Jobs</Link>
               </Button>
               <Button 
                 variant="outline" 
-                className="border-2 border-[#3B82F6] text-black rounded-full"
+                className="border-2 border-[#F6C500] text-black rounded-full"
                 asChild
               >
-                <Link href="/post-job">Post a Job</Link>
+                <Link href="/for-employers">For Employers</Link>
               </Button>
             </div>
           </div>
@@ -72,13 +86,18 @@ const Hero = () => {
               alt="Young professional looking for job opportunities" 
               className="rounded-lg shadow-xl mx-auto lg:ml-auto float-animation" 
             />
+            
+            {/* A few more bees around the image */}
+            <AnimatedBee style={{ top: "10%", left: "10%" }} />
+            <AnimatedBee style={{ top: "70%", left: "20%" }} />
+            <AnimatedBee style={{ top: "30%", right: "10%" }} />
           </div>
         </div>
       </div>
       
-      {/* Background Grid Pattern */}
+      {/* Background Hexagon Pattern */}
       <div className="absolute top-0 right-0 w-1/3 h-full opacity-10">
-        <div className="w-full h-full" style={{ backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyBmaWxsPSIjM0I4MkY2IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgPHBhdGggZD0iTTAgMGg0MHY0MEgwVjB6TTIwIDIwaDIwdjIwSDIwVjIweiIgb3BhY2l0eT0iLjUiLz4KICAgIDxwYXRoIGQ9Ik0wIDIwaDIwdjIwSDBWMjB6TTE1IDE1aDEwdjEwSDE1VjE1eiIgb3BhY2l0eT0iLjMiLz4KICA8L2c+Cjwvc3ZnPg==")`, backgroundRepeat: "repeat" }}></div>
+        <div className="w-full h-full" style={{ backgroundImage: `url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4NiIgaGVpZ2h0PSIxMDAiPgogIDxwYXRoIGZpbGw9IiNGNkM1MDAiIGQ9Ik00MyAwbDQzIDI1djUwbC00MyAyNUwwIDc1VjI1eiI+PC9wYXRoPgo8L3N2Zz4=")`, backgroundRepeat: "repeat" }}></div>
       </div>
     </section>
   );

@@ -1,24 +1,24 @@
 import { useEffect, useRef, CSSProperties } from "react";
 
 /**
- * Animated Icon Component
+ * Animated Bee Component
  * 
- * Creates an animated briefcase icon that follows a random path
+ * Creates an animated bee emoji that follows a random flight path
  * Adds visual interest to the hero section and throughout the site
- * Uses emoji (💼) representing employment and career opportunities
+ * Uses emoji (🐝) instead of SVG for a simpler, more playful approach
  * 
  * @param {Object} props - Component props
  * @param {CSSProperties} props.style - Style object for positioning
  */
-const AnimatedIcon = ({ style }: { style?: CSSProperties }) => {
-  const iconRef = useRef<HTMLDivElement>(null);
+const AnimatedBee = ({ style }: { style?: CSSProperties }) => {
+  const beeRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    const icon = iconRef.current;
-    if (!icon) return;
+    const bee = beeRef.current;
+    if (!bee) return;
     
     // Create animation function
-    const animateIcon = () => {
+    const animateBee = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       
@@ -27,7 +27,7 @@ const AnimatedIcon = ({ style }: { style?: CSSProperties }) => {
       const randomY = Math.random() * (viewportHeight / 2) + 100; // Keep in upper half
       
       // Animate to random position with rotation
-      const animation = icon.animate([
+      const animation = bee.animate([
         { transform: `translate(${randomX}px, ${randomY}px) rotate(${Math.random() * 35 - 15}deg)` }
       ], {
         duration: 8000 + (Math.random() * 2000), // Random duration between 8-10s
@@ -36,11 +36,11 @@ const AnimatedIcon = ({ style }: { style?: CSSProperties }) => {
       });
       
       // Call again after animation completes
-      animation.onfinish = animateIcon;
+      animation.onfinish = animateBee;
     };
     
     // Start animation with small delay
-    const timeoutId = setTimeout(animateIcon, Math.random() * 500);
+    const timeoutId = setTimeout(animateBee, Math.random() * 500);
     
     return () => {
       clearTimeout(timeoutId);
@@ -49,8 +49,8 @@ const AnimatedIcon = ({ style }: { style?: CSSProperties }) => {
 
   return (
     <div 
-      className="animated-icon" 
-      ref={iconRef} 
+      className="bee" 
+      ref={beeRef} 
       style={{
         fontSize: '28px',
         display: 'flex',
@@ -60,9 +60,9 @@ const AnimatedIcon = ({ style }: { style?: CSSProperties }) => {
       }}
       aria-hidden="true"
     >
-      💼
+      🐝
     </div>
   );
 };
 
-export default AnimatedIcon;
+export default AnimatedBee;

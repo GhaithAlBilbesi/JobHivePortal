@@ -18,7 +18,7 @@ const Home = () => {
   
   // Set page title
   useEffect(() => {
-    document.title = "JobHive - Find your perfect career opportunity";
+    document.title = "JobHive - Sweet opportunities for the NewBees!";
   }, []);
 
   return (

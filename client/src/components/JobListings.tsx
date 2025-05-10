@@ -78,7 +78,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 1,
       title: "UI/UX Design Intern",
-      company: "TechDesign Studios",
+      company: "TechBee Company",
       type: "Internship",
       location: "Amman, Jordan",
       schedule: "Part-time, 20 hours/week",
@@ -91,7 +91,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 2,
       title: "Junior Web Developer",
-      company: "Tech Solutions Inc.",
+      company: "HiveWorks Solutions",
       type: "Full-time",
       location: "Cairo, Egypt",
       schedule: "Full-time, 40 hours/week",
@@ -104,7 +104,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 3,
       title: "Marketing Assistant",
-      company: "Global Marketing Agency",
+      company: "BeeMarketing Agency",
       type: "Entry Level",
       location: "Dubai, UAE",
       schedule: "Full-time, 40 hours/week",
@@ -117,7 +117,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 4,
       title: "Graphic Design Intern",
-      company: "Creative Design Studio",
+      company: "Creative Hive",
       type: "Internship",
       location: "Remote",
       schedule: "Part-time, 25 hours/week",
@@ -130,7 +130,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 5,
       title: "Data Analyst",
-      company: "DataSight Analytics",
+      company: "DataBee Analytics",
       type: "Full-time",
       location: "Riyadh, Saudi Arabia",
       schedule: "Full-time, 40 hours/week",
@@ -143,7 +143,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 6,
       title: "Front-end Developer",
-      company: "WebPro Technologies",
+      company: "WebHive Tech",
       type: "Full-time",
       location: "Istanbul, Turkey",
       schedule: "Full-time, 40 hours/week",
@@ -156,7 +156,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 7,
       title: "Customer Service Representative",
-      company: "CustomerCare International",
+      company: "SupportBee",
       type: "Part-time",
       location: "Remote",
       schedule: "Part-time, 20 hours/week",
@@ -169,7 +169,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 8,
       title: "Junior Financial Analyst",
-      company: "FinSmart Advisors",
+      company: "FinanceBee",
       type: "Full-time",
       location: "Amman, Jordan",
       schedule: "Full-time, 40 hours/week",
@@ -182,7 +182,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 9,
       title: "Content Creator",
-      company: "ContentWave Media",
+      company: "ContentHive Media",
       type: "Freelance",
       location: "Remote",
       schedule: "Flexible hours",
