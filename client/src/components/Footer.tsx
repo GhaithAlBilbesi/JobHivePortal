@@ -12,7 +12,6 @@ const Footer = () => {
     { label: "Home", path: "/" },
     { label: "Browse Jobs", path: "/jobs" },
     { label: "Resume Builder", path: "/resume-builder" },
-    { label: "For Employers", path: "/for-employers" },
     { label: "Contact Us", path: "/contact" }
   ];
   
