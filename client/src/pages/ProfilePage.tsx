@@ -16,7 +16,7 @@ import { useLocation } from 'wouter';
  * Provides sections for personal details, skills, and account settings
  */
 const ProfilePage: React.FC = () => {
-  const { user, isAuthenticated } = useUser();
+  const { user, isAuthenticated, updateProfile } = useUser();
   const [, navigate] = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   
@@ -80,11 +80,11 @@ const ProfilePage: React.FC = () => {
   };
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // In a real app, this would send updated profile data to the server
-    console.log('Profile update submitted', {
+    // Create the profile update object
+    const profileData: Partial<User> = {
       name,
       title,
       bio,
@@ -92,15 +92,27 @@ const ProfilePage: React.FC = () => {
       phone,
       location,
       website,
-      skills,
-      profileImage
-    });
+      skills
+    };
     
-    // For now, just exit edit mode
-    setIsEditing(false);
+    // TODO: In a real app, we would handle the profile image upload here
+    // and get a URL back from the server to store
     
-    // Display a success message
-    alert('Profile updated successfully!');
+    try {
+      // Call the updateProfile method from the context
+      const success = await updateProfile(profileData);
+      
+      if (success) {
+        // Exit edit mode
+        setIsEditing(false);
+        alert('Profile updated successfully!');
+      } else {
+        alert('There was a problem updating your profile. Please try again.');
+      }
+    } catch (error) {
+      console.error('Profile update error:', error);
+      alert('An error occurred while updating your profile.');
+    }
   };
 
   // Get user initials for avatar fallback
