@@ -14,6 +14,12 @@ export interface User {
   name: string;
   role: UserRole;
   profilePicture?: string;
+  title?: string;
+  bio?: string;
+  phone?: string;
+  location?: string;
+  website?: string;
+  skills?: string[];
 }
 
 /**
@@ -25,6 +31,7 @@ interface UserContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   register: (userData: Partial<User>, password: string) => Promise<boolean>;
+  updateProfile: (profileData: Partial<User>) => Promise<boolean>;
   isRole: (role: UserRole) => boolean;
 }
 
@@ -37,6 +44,7 @@ const defaultUserContext: UserContextType = {
   login: async () => false,
   logout: () => {},
   register: async () => false,
+  updateProfile: async () => false,
   isRole: () => false,
 };
 
@@ -62,7 +70,13 @@ const MOCK_USERS = [
     name: 'Student User',
     password: 'password123',
     role: 'student' as UserRole,
-    profilePicture: 'https://i.pravatar.cc/150?u=student'
+    profilePicture: 'https://i.pravatar.cc/150?u=student',
+    title: 'Computer Science Student',
+    bio: 'Final year computer science student with a passion for web development and AI. Looking for entry-level opportunities to apply my skills and grow as a developer.',
+    phone: '+1 (555) 123-4567',
+    location: 'San Francisco, CA',
+    website: 'https://student-portfolio.com',
+    skills: ['JavaScript', 'React', 'Node.js', 'Python', 'Machine Learning']
   },
   {
     id: '2',
@@ -70,7 +84,13 @@ const MOCK_USERS = [
     name: 'Employer User',
     password: 'password123',
     role: 'employer' as UserRole,
-    profilePicture: 'https://i.pravatar.cc/150?u=employer'
+    profilePicture: 'https://i.pravatar.cc/150?u=employer',
+    title: 'HR Manager at TechCorp',
+    bio: 'Representing TechCorp, a leading software development company. We\'re always looking for fresh talent to join our innovative team.',
+    phone: '+1 (555) 987-6543',
+    location: 'New York, NY',
+    website: 'https://techcorp.com',
+    skills: ['Recruitment', 'Talent Acquisition', 'HR Management']
   },
   {
     id: '3',
@@ -78,7 +98,13 @@ const MOCK_USERS = [
     name: 'Admin User',
     password: 'password123',
     role: 'admin' as UserRole,
-    profilePicture: 'https://i.pravatar.cc/150?u=admin'
+    profilePicture: 'https://i.pravatar.cc/150?u=admin',
+    title: 'Platform Administrator',
+    bio: 'Managing JobHive platform operations and ensuring a smooth experience for all users.',
+    phone: '+1 (555) 456-7890',
+    location: 'Remote',
+    website: 'https://jobhive.com',
+    skills: ['Platform Administration', 'Customer Support', 'User Experience']
   }
 ];
 
@@ -172,6 +198,36 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   };
 
   /**
+   * Update Profile function - updates user profile data
+   * In a real application, this would make an API call
+   * Here we're just updating the local state
+   */
+  const updateProfile = async (profileData: Partial<User>): Promise<boolean> => {
+    // Simulate API call delay
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    if (!user) {
+      return false;
+    }
+    
+    // In a real app, this would send profile data to the server
+    // and then update the local state with the returned user
+    try {
+      // Create updated user object
+      const updatedUser = { ...user, ...profileData };
+      
+      // Update state
+      setUser(updatedUser);
+      localStorage.setItem('jobhive_user', JSON.stringify(updatedUser));
+      
+      return true;
+    } catch (error) {
+      console.error('Profile update error:', error);
+      return false;
+    }
+  };
+
+  /**
    * Helper function to check if user has a specific role
    */
   const isRole = (role: UserRole): boolean => {
@@ -185,6 +241,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     login,
     logout,
     register,
+    updateProfile,
     isRole
   };
 

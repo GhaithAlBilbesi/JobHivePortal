@@ -12,6 +12,7 @@ import PostJob from "@/pages/PostJob";
 import Dashboard from "@/pages/Dashboard";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import ProfilePage from "@/pages/ProfilePage";
 import CompanyInfo from "@/pages/EmployerRegister/CompanyInfo";
 import FoundingInfo from "@/pages/EmployerRegister/FoundingInfo";
 import SocialMedia from "@/pages/EmployerRegister/SocialMedia";
@@ -44,10 +45,7 @@ function Router() {
         <Route path="/register/employer/contact" component={Contact} />
         <Route path="/register/employer/complete" component={Complete} />
         <Route path="/register/student" component={StudentRegister} />
-        <Route path="/profile" component={() => <div className="pt-32 pb-20 min-h-screen container mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-6">User Profile</h1>
-          <p className="text-gray-600">Profile management functionality is coming soon.</p>
-        </div>} />
+        <Route path="/profile" component={ProfilePage} />
         <Route path="/admin" component={() => <div className="pt-32 pb-20 min-h-screen container mx-auto px-4">
           <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
           <p className="text-gray-600">Admin panel functionality is coming soon.</p>
