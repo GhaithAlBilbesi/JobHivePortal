@@ -14,15 +14,7 @@ const Hero = () => {
   const heroContentRef = useRef<HTMLDivElement>(null);
   const heroImageRef = useRef<HTMLDivElement>(null);
 
-  // Set initial visibility and trigger animations
-  useEffect(() => {
-    if (heroContentRef.current) {
-      heroContentRef.current.classList.add("fade-in-up");
-    }
-    if (heroImageRef.current) {
-      heroImageRef.current.classList.add("fade-in-up", "animate-delay-200");
-    }
-  }, []);
+  // No animations per user request
 
   return (
     <section className="relative bg-[#FFFBEA] py-12 lg:py-20 overflow-hidden pt-32" ref={heroRef}>
@@ -63,13 +55,13 @@ const Hero = () => {
           
           {/* Right Column - Hero Image */}
           <div 
-            className="w-full lg:w-1/2 relative opacity-0" 
+            className="w-full lg:w-1/2 relative" 
             ref={heroImageRef}
           >
             <img 
               src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600" 
               alt="Young professional looking for job opportunities" 
-              className="rounded-lg shadow-xl mx-auto lg:ml-auto float-animation" 
+              className="rounded-lg shadow-xl mx-auto lg:ml-auto" 
             />
           </div>
         </div>

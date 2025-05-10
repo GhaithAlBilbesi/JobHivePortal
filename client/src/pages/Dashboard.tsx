@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useUser } from "@/contexts/UserContext";
-import LoginModal from "@/components/auth/LoginModal";
+//import LoginModal from "@/components/auth/LoginModal"; // No longer needed
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Progress } from "@/components/ui/progress";
@@ -20,7 +20,7 @@ import { Progress } from "@/components/ui/progress";
 const Dashboard = () => {
   const { ref: pageRef } = useScrollAnimation();
   const { isAuthenticated, user, isRole } = useUser();
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  // No longer need login modal state
   const { toast } = useToast();
   const [, navigate] = useLocation();
   
@@ -41,23 +41,13 @@ const Dashboard = () => {
             </p>
             <Button 
               style={{ backgroundColor: "#F6C500", color: "#000000" }}
-              onClick={() => setIsLoginModalOpen(true)}
+              onClick={() => navigate("/login")}
               size="lg"
             >
               Sign In to Access Dashboard
             </Button>
           </div>
-          <LoginModal 
-            isOpen={isLoginModalOpen} 
-            onClose={() => setIsLoginModalOpen(false)} 
-            action="login"
-            afterLogin={() => {
-              toast({
-                title: "Welcome!",
-                description: "You can now access your dashboard."
-              });
-            }}
-          />
+          {/* LoginModal removed - now using dedicated login page */}
         </div>
       </main>
     );
