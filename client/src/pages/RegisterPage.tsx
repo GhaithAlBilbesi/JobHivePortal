@@ -140,7 +140,7 @@ const RegisterPage = () => {
 
   // Navigate to login page
   const goToLogin = () => {
-    navigate('/login');
+    setLocation('/login');
   };
 
   return (
