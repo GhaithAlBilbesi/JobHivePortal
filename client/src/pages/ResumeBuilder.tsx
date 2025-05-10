@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -6,21 +6,80 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { useUser } from "@/contexts/UserContext";
+import LoginModal from "@/components/auth/LoginModal";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 /**
  * Resume Builder Page
  * 
  * A comprehensive tool for students and graduates to create professional resumes
  * Features step-by-step process with templates and guidance for each section
+ * Only accessible to authenticated students
  */
 const ResumeBuilder = () => {
   const { ref: pageRef } = useScrollAnimation();
+  const { isAuthenticated, user, isRole } = useUser();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
   
   // Set page title
   useEffect(() => {
     document.title = "Resume Builder - JobHive";
   }, []);
 
+  // Check if user is authenticated and has student role
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (!isRole('student')) {
+        toast({
+          title: "Access Restricted",
+          description: "Resume Builder is only available to student accounts.",
+          variant: "destructive"
+        });
+        navigate("/");
+      }
+    }
+  }, [isAuthenticated, isRole, navigate, toast]);
+
+  // If not authenticated, show login prompt
+  if (!isAuthenticated) {
+    return (
+      <main className="py-20 px-4" ref={pageRef}>
+        <div className="container fade-in-up">
+          <div className="mb-10 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">Resume Builder</h1>
+            <p className="text-lg max-w-2xl mx-auto mb-8">
+              Our resume builder is designed specifically for students and fresh graduates.
+              Sign in with your student account to access this feature.
+            </p>
+            <Button 
+              style={{ backgroundColor: "#F6C500", color: "#000000" }}
+              onClick={() => setIsLoginModalOpen(true)}
+              size="lg"
+            >
+              Sign In to Access Resume Builder
+            </Button>
+          </div>
+          <LoginModal 
+            isOpen={isLoginModalOpen} 
+            onClose={() => setIsLoginModalOpen(false)} 
+            action="login"
+            afterLogin={() => {
+              toast({
+                title: "Welcome!",
+                description: "You can now access the Resume Builder."
+              });
+            }}
+          />
+        </div>
+      </main>
+    );
+  }
+
+  // For authenticated students, show resume builder
   return (
     <main className="py-20 px-4" ref={pageRef}>
       <div className="container fade-in-up">

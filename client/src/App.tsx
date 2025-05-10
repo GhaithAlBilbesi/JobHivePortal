@@ -8,14 +8,14 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import JobsPage from "@/pages/JobsPage";
 import ResumeBuilder from "@/pages/ResumeBuilder";
-import EmployerPage from "@/pages/EmployerPage";
+import PostJob from "@/pages/PostJob";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 /**
  * Router component that handles all application routes
  * Sets up main routes for the application, including home, jobs, resume builder, 
- * employer page, and a fallback 404 page
+ * post job, and role-specific pages
  */
 function Router() {
   return (
@@ -25,7 +25,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/jobs" component={JobsPage} />
         <Route path="/resume-builder" component={ResumeBuilder} />
-        <Route path="/for-employers" component={EmployerPage} />
+        <Route path="/post-job" component={PostJob} />
         <Route path="/dashboard" component={() => <div className="pt-32 pb-20 min-h-screen container mx-auto px-4">
           <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
           <p className="text-gray-600">Dashboard functionality is coming soon.</p>
@@ -33,10 +33,6 @@ function Router() {
         <Route path="/profile" component={() => <div className="pt-32 pb-20 min-h-screen container mx-auto px-4">
           <h1 className="text-3xl font-bold mb-6">User Profile</h1>
           <p className="text-gray-600">Profile management functionality is coming soon.</p>
-        </div>} />
-        <Route path="/post-job" component={() => <div className="pt-32 pb-20 min-h-screen container mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-6">Post a Job</h1>
-          <p className="text-gray-600">Job posting functionality is coming soon.</p>
         </div>} />
         <Route path="/admin" component={() => <div className="pt-32 pb-20 min-h-screen container mx-auto px-4">
           <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>

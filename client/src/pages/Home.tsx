@@ -3,7 +3,6 @@ import Stats from "@/components/Stats";
 import Features from "@/components/Features";
 import JobListings from "@/components/JobListings";
 import ResumeSection from "@/components/ResumeSection";
-import EmployerCTA from "@/components/EmployerCTA";
 import { useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 
@@ -28,10 +27,9 @@ const Home = () => {
       <Stats />
       <Features />
       <JobListings />
-      <ResumeSection />
-      {/* Only show Employer CTA section for non-employer users */}
+      {/* Only show Resume Section for non-employers */}
       {(!isAuthenticated || !isRole('employer')) && (
-        <EmployerCTA />
+        <ResumeSection />
       )}
     </main>
   );
