@@ -22,7 +22,7 @@ const Hero = () => {
         <div className="flex flex-col lg:flex-row items-center">
           {/* Left Column - Text Content */}
           <div 
-            className="w-full lg:w-1/2 mb-10 lg:mb-0 z-10 opacity-0" 
+            className="w-full lg:w-1/2 mb-10 lg:mb-0 z-10" 
             ref={heroContentRef}
           >
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 relative">

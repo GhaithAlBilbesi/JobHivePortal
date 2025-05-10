@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useUser } from "@/contexts/UserContext";
-import LoginModal from "@/components/auth/LoginModal";
+// LoginModal no longer needed - using dedicated login page instead
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
@@ -21,7 +21,7 @@ import { useLocation } from "wouter";
 const ResumeBuilder = () => {
   const { ref: pageRef } = useScrollAnimation();
   const { isAuthenticated, user, isRole } = useUser();
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  // No longer need login modal state
   const { toast } = useToast();
   const [, navigate] = useLocation();
   
@@ -57,23 +57,13 @@ const ResumeBuilder = () => {
             </p>
             <Button 
               style={{ backgroundColor: "#F6C500", color: "#000000" }}
-              onClick={() => setIsLoginModalOpen(true)}
+              onClick={() => navigate("/login")}
               size="lg"
             >
               Sign In to Access Resume Builder
             </Button>
           </div>
-          <LoginModal 
-            isOpen={isLoginModalOpen} 
-            onClose={() => setIsLoginModalOpen(false)} 
-            action="login"
-            afterLogin={() => {
-              toast({
-                title: "Welcome!",
-                description: "You can now access the Resume Builder."
-              });
-            }}
-          />
+          {/* LoginModal removed - now using dedicated login page */}
         </div>
       </main>
     );
@@ -85,10 +75,112 @@ const ResumeBuilder = () => {
       <div className="container fade-in-up">
         <div className="mb-10 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Create Your Professional Resume</h1>
-          <p className="text-lg max-w-2xl mx-auto">
+          <p className="text-lg max-w-2xl mx-auto mb-8">
             Our resume builder is designed specifically for students and fresh graduates.
             Highlight your skills, education, and projects in a professional format that stands out to employers.
           </p>
+          
+          {/* New Template Selection Section */}
+          <div className="mb-12">
+            <h2 className="text-2xl font-bold mb-6 text-center">Choose a Template</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {/* Template 1 - Modern */}
+              <div className="border-2 border-[#F6C500] rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow">
+                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
+                  <img 
+                    src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
+                    alt="Modern Resume Template" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-center font-medium">Modern</p>
+              </div>
+              
+              {/* Template 2 - Minimal */}
+              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
+                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
+                  <img 
+                    src="https://images.unsplash.com/photo-1626197031507-4c3672337971?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
+                    alt="Minimal Resume Template" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-center font-medium">Minimal</p>
+              </div>
+              
+              {/* Template 3 - Creative */}
+              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
+                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
+                  <img 
+                    src="https://images.unsplash.com/photo-1595085610126-5030f5373c8d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
+                    alt="Creative Resume Template" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-center font-medium">Creative</p>
+              </div>
+              
+              {/* Template 4 - Professional */}
+              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
+                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
+                  <img 
+                    src="https://images.unsplash.com/photo-1611175694989-4870fafa4494?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
+                    alt="Professional Resume Template" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-center font-medium">Professional</p>
+              </div>
+              
+              {/* Template 5 - Technical */}
+              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
+                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
+                  <img 
+                    src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
+                    alt="Technical Resume Template" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-center font-medium">Technical</p>
+              </div>
+              
+              {/* Template 6 - Academic */}
+              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
+                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
+                  <img 
+                    src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
+                    alt="Academic Resume Template" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-center font-medium">Academic</p>
+              </div>
+              
+              {/* Template 7 - Basic */}
+              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
+                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
+                  <img 
+                    src="https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
+                    alt="Basic Resume Template" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-center font-medium">Basic</p>
+              </div>
+              
+              {/* Template 8 - Executive */}
+              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
+                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
+                  <img 
+                    src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
+                    alt="Executive Resume Template" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <p className="text-center font-medium">Executive</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <Card className="mb-10 fade-in-up animate-delay-100">
