@@ -3,9 +3,9 @@ import Stats from "@/components/Stats";
 import Features from "@/components/Features";
 import JobListings from "@/components/JobListings";
 import ResumeSection from "@/components/ResumeSection";
-import Testimonials from "@/components/Testimonials";
 import EmployerCTA from "@/components/EmployerCTA";
 import { useEffect } from "react";
+import { useUser } from "@/contexts/UserContext";
 
 /**
  * Home Page Component
@@ -15,6 +15,8 @@ import { useEffect } from "react";
  * Each section is a separate component to maintain modularity and reusability
  */
 const Home = () => {
+  const { isAuthenticated, isRole } = useUser();
+  
   // Set page title
   useEffect(() => {
     document.title = "JobHive - Sweet opportunities for the NewBees!";
@@ -27,8 +29,10 @@ const Home = () => {
       <Features />
       <JobListings />
       <ResumeSection />
-      <Testimonials />
-      <EmployerCTA />
+      {/* Only show Employer CTA section for non-employer users */}
+      {(!isAuthenticated || !isRole('employer')) && (
+        <EmployerCTA />
+      )}
     </main>
   );
 };
