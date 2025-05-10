@@ -8,13 +8,14 @@ import { useScrollAnimation } from "@/hooks/useScrollAnimation";
  * Hero Component
  * 
  * Main landing banner showcasing the core value proposition
- * Features animated bee elements and a call-to-action
+ * Features animated bee emojis flying around the title
  * Implements a responsive design that adapts to different screen sizes
  */
 const Hero = () => {
   const { ref: heroRef } = useScrollAnimation();
   const heroContentRef = useRef<HTMLDivElement>(null);
   const heroImageRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLSpanElement>(null);
 
   // Set initial visibility and trigger animations
   useEffect(() => {
@@ -35,9 +36,23 @@ const Hero = () => {
             className="w-full lg:w-1/2 mb-10 lg:mb-0 z-10 opacity-0" 
             ref={heroContentRef}
           >
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 relative">
               <span className="block">Sweet opportunities</span>
-              <span className="block text-[#F6C500]">for the NewBees!</span>
+              <span className="block text-[#F6C500] relative" ref={titleRef}>
+                for the NewBees!
+                
+                {/* Bees flying around the title */}
+                <div className="absolute" style={{ width: '100%', height: '300%', top: '-100%', left: 0, pointerEvents: 'none' }}>
+                  <AnimatedBee style={{ position: 'absolute', top: "-50%", left: "5%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "30%", left: "25%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "80%", left: "10%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "0%", left: "60%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "60%", left: "80%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "-20%", left: "50%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "90%", left: "40%" }} />
+                  <AnimatedBee style={{ position: 'absolute', top: "40%", left: "70%" }} />
+                </div>
+              </span>
             </h1>
             <p className="text-lg md:text-xl text-gray-700 mb-8 max-w-xl">
               Find the perfect job opportunities tailored for students and fresh graduates. 
@@ -72,11 +87,10 @@ const Hero = () => {
               className="rounded-lg shadow-xl mx-auto lg:ml-auto float-animation" 
             />
             
-            {/* Animated Bees */}
+            {/* A few more bees around the image */}
             <AnimatedBee style={{ top: "10%", left: "10%" }} />
             <AnimatedBee style={{ top: "70%", left: "20%" }} />
             <AnimatedBee style={{ top: "30%", right: "10%" }} />
-            <AnimatedBee style={{ top: "60%", right: "20%" }} />
           </div>
         </div>
       </div>
