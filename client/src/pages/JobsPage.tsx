@@ -13,9 +13,9 @@ import { Label } from "@/components/ui/label";
  */
 const JobsPage = () => {
   const [filters, setFilters] = useState({
-    location: "",
-    jobType: "",
-    experience: "",
+    location: "all_locations",
+    jobType: "all_types",
+    experience: "all_levels",
     search: ""
   });
 

@@ -16,9 +16,9 @@ import { Label } from "@/components/ui/label";
 const JobListings = ({ filters = {}, fullPage = false }: { filters?: any, fullPage?: boolean }) => {
   const { ref: jobsRef } = useScrollAnimation();
   const [localFilters, setLocalFilters] = useState({
-    location: filters.location || "",
-    jobType: filters.jobType || "",
-    experience: filters.experience || "",
+    location: filters.location || "all_locations",
+    jobType: filters.jobType || "all_types",
+    experience: filters.experience || "all_levels",
     search: filters.search || ""
   });
   
@@ -102,7 +102,7 @@ const JobListings = ({ filters = {}, fullPage = false }: { filters?: any, fullPa
                     <SelectValue placeholder="All Locations" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Locations</SelectItem>
+                    <SelectItem value="all_locations">All Locations</SelectItem>
                     <SelectItem value="remote">Remote</SelectItem>
                     <SelectItem value="amman">Amman, Jordan</SelectItem>
                     <SelectItem value="cairo">Cairo, Egypt</SelectItem>
@@ -121,7 +121,7 @@ const JobListings = ({ filters = {}, fullPage = false }: { filters?: any, fullPa
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Types</SelectItem>
+                    <SelectItem value="all_types">All Types</SelectItem>
                     <SelectItem value="full-time">Full-time</SelectItem>
                     <SelectItem value="part-time">Part-time</SelectItem>
                     <SelectItem value="internship">Internship</SelectItem>
@@ -140,7 +140,7 @@ const JobListings = ({ filters = {}, fullPage = false }: { filters?: any, fullPa
                     <SelectValue placeholder="All Levels" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Levels</SelectItem>
+                    <SelectItem value="all_levels">All Levels</SelectItem>
                     <SelectItem value="entry">Entry Level</SelectItem>
                     <SelectItem value="internship">Internship</SelectItem>
                     <SelectItem value="1-2">1-2 Years</SelectItem>

@@ -156,19 +156,19 @@ export const fetchJobs = async (filters: any = {}) => {
   let filteredJobs = [...jobs];
   
   // Apply filters
-  if (filters.location) {
+  if (filters.location && filters.location !== 'all_locations') {
     filteredJobs = filteredJobs.filter(job => 
       job.location.toLowerCase().includes(filters.location.toLowerCase())
     );
   }
   
-  if (filters.jobType) {
+  if (filters.jobType && filters.jobType !== 'all_types') {
     filteredJobs = filteredJobs.filter(job => 
       job.type.toLowerCase().includes(filters.jobType.toLowerCase())
     );
   }
   
-  if (filters.experience) {
+  if (filters.experience && filters.experience !== 'all_levels') {
     // Map experience filter values to job types
     const experienceMap: Record<string, string[]> = {
       'entry': ['Entry Level'],
