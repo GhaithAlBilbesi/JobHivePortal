@@ -25,14 +25,14 @@ export const jobs: Job[] = [
   {
     id: 1,
     title: "UI/UX Design Intern",
-    company: "TechBee Company",
+    company: "TechDesign Studios",
     type: "Internship",
     location: "Amman, Jordan (Remote)",
     schedule: "Part-time, 20 hours/week",
     salary: "300-500 JOD/month",
     skills: ["Figma", "UI Design", "Wireframing", "Adobe XD"],
     icon: "fa-laptop-code",
-    description: "TechBee is looking for a passionate UI/UX Design Intern to join our creative team. You'll work on real client projects, creating user-friendly interfaces and gaining valuable industry experience.",
+    description: "TechDesign Studios is looking for a passionate UI/UX Design Intern to join our creative team. You'll work on real client projects, creating user-friendly interfaces and gaining valuable industry experience.",
     requirements: [
       "Currently enrolled in a design-related program",
       "Basic knowledge of design tools (Figma, Adobe XD)",

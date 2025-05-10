@@ -78,7 +78,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 1,
       title: "UI/UX Design Intern",
-      company: "TechBee Company",
+      company: "TechDesign Studios",
       type: "Internship",
       location: "Amman, Jordan",
       schedule: "Part-time, 20 hours/week",
@@ -104,7 +104,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 3,
       title: "Marketing Assistant",
-      company: "BeeMarketing Agency",
+      company: "Global Marketing Agency",
       type: "Entry Level",
       location: "Dubai, UAE",
       schedule: "Full-time, 40 hours/week",
@@ -130,7 +130,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 5,
       title: "Data Analyst",
-      company: "DataBee Analytics",
+      company: "DataSight Analytics",
       type: "Full-time",
       location: "Riyadh, Saudi Arabia",
       schedule: "Full-time, 40 hours/week",
@@ -143,7 +143,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 6,
       title: "Front-end Developer",
-      company: "WebHive Tech",
+      company: "WebPro Technologies",
       type: "Full-time",
       location: "Istanbul, Turkey",
       schedule: "Full-time, 40 hours/week",
@@ -156,7 +156,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 7,
       title: "Customer Service Representative",
-      company: "SupportBee",
+      company: "CustomerCare International",
       type: "Part-time",
       location: "Remote",
       schedule: "Part-time, 20 hours/week",
@@ -169,7 +169,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 8,
       title: "Junior Financial Analyst",
-      company: "FinanceBee",
+      company: "FinSmart Advisors",
       type: "Full-time",
       location: "Amman, Jordan",
       schedule: "Full-time, 40 hours/week",
@@ -182,7 +182,7 @@ const JobListings = ({ filters = {}, fullPage = false, onApplyClick }: JobListin
     {
       id: 9,
       title: "Content Creator",
-      company: "ContentHive Media",
+      company: "ContentWave Media",
       type: "Freelance",
       location: "Remote",
       schedule: "Flexible hours",
