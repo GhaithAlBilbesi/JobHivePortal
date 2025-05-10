@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { UserProvider } from "@/contexts/UserContext";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import JobsPage from "@/pages/JobsPage";
@@ -25,6 +26,22 @@ function Router() {
         <Route path="/jobs" component={JobsPage} />
         <Route path="/resume-builder" component={ResumeBuilder} />
         <Route path="/for-employers" component={EmployerPage} />
+        <Route path="/dashboard" component={() => <div className="pt-32 pb-20 min-h-screen container mx-auto px-4">
+          <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+          <p className="text-gray-600">Dashboard functionality is coming soon.</p>
+        </div>} />
+        <Route path="/profile" component={() => <div className="pt-32 pb-20 min-h-screen container mx-auto px-4">
+          <h1 className="text-3xl font-bold mb-6">User Profile</h1>
+          <p className="text-gray-600">Profile management functionality is coming soon.</p>
+        </div>} />
+        <Route path="/post-job" component={() => <div className="pt-32 pb-20 min-h-screen container mx-auto px-4">
+          <h1 className="text-3xl font-bold mb-6">Post a Job</h1>
+          <p className="text-gray-600">Job posting functionality is coming soon.</p>
+        </div>} />
+        <Route path="/admin" component={() => <div className="pt-32 pb-20 min-h-screen container mx-auto px-4">
+          <h1 className="text-3xl font-bold mb-6">Admin Panel</h1>
+          <p className="text-gray-600">Admin panel functionality is coming soon.</p>
+        </div>} />
         <Route component={NotFound} />
       </Switch>
       <Footer />
@@ -34,16 +51,21 @@ function Router() {
 
 /**
  * Main App component
- * Sets up QueryClientProvider for data fetching
- * Includes TooltipProvider for tooltips and Toaster for notifications
+ * Sets up providers for the application:
+ * - QueryClientProvider for data fetching
+ * - UserProvider for authentication and user management
+ * - TooltipProvider for tooltips
+ * - Toaster for notifications
  */
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <UserProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </UserProvider>
     </QueryClientProvider>
   );
 }

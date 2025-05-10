@@ -1,19 +1,45 @@
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Job } from "./JobListings";
+
+/**
+ * Job Card Component Props
+ */
+interface JobCardProps {
+  job: Job;
+  animationDelay?: number;
+  onApply?: () => void;
+}
 
 /**
  * Job Card Component
  * 
  * Displays a single job posting with all relevant details
  * Handles animation and interaction for the job card
+ * Includes Apply button with authentication check
  * 
  * @param {Object} props - Component props
- * @param {Object} props.job - Job data object
+ * @param {Job} props.job - Job data object
  * @param {number} props.animationDelay - Delay for animation in milliseconds
+ * @param {Function} props.onApply - Callback function when Apply button is clicked
  */
-const JobCard = ({ job, animationDelay = 0 }: { job: any, animationDelay?: number }) => {
+const JobCard = ({ job, animationDelay = 0, onApply }: JobCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  
+  // Format posted date to "X days ago" format
+  const getPostedDate = () => {
+    if (!job.postedDate) return "Recently posted";
+    
+    const postedDate = new Date(job.postedDate);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - postedDate.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return "Posted today";
+    if (diffDays === 1) return "Posted yesterday";
+    return `Posted ${diffDays} days ago`;
+  };
   
   return (
     <div 
@@ -43,9 +69,13 @@ const JobCard = ({ job, animationDelay = 0 }: { job: any, animationDelay?: numbe
           <i className="fas fa-clock mr-2"></i>
           <span>{job.schedule}</span>
         </div>
-        <div className="flex items-center text-gray-600 mb-3">
+        <div className="flex items-center text-gray-600 mb-2">
           <i className="fas fa-money-bill-wave mr-2"></i>
           <span>{job.salary}</span>
+        </div>
+        <div className="flex items-center text-gray-500 text-sm mb-3">
+          <i className="fas fa-calendar-alt mr-2"></i>
+          <span>{getPostedDate()}</span>
         </div>
         
         <div className="flex flex-wrap gap-2 mt-3 mb-4">
@@ -60,12 +90,14 @@ const JobCard = ({ job, animationDelay = 0 }: { job: any, animationDelay?: numbe
           <Button 
             className="rounded-full"
             style={{ backgroundColor: "#F6C500", color: "#000000" }}
+            onClick={onApply}
           >
             Apply Now
           </Button>
           <Button 
             variant="outline" 
             className="border border-gray-300 text-gray-600 rounded-full"
+            title="Save Job"
           >
             <i className="far fa-bookmark"></i>
           </Button>
