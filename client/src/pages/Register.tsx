@@ -1,0 +1,254 @@
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Link, useLocation } from 'wouter';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import logo from '@/assets/logo.svg';
+
+/**
+ * Register Page Component
+ * 
+ * Initial registration page with account type selection
+ * Follows the design from provided mockups
+ */
+const Register = () => {
+  const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [accountType, setAccountType] = useState('student');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [, navigate] = useLocation();
+
+  // Set page title
+  useEffect(() => {
+    document.title = "Create Account - JobHive";
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (password !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+    
+    if (!agreeTerms) {
+      alert('You must agree to the Terms of Service');
+      return;
+    }
+    
+    // Navigate to the appropriate profile setup based on account type
+    if (accountType === 'employer') {
+      navigate('/register/employer');
+    } else {
+      navigate('/register/student');
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex">
+      {/* Left Section - Registration Form */}
+      <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col">
+        <div className="mb-8">
+          <Link href="/" className="flex items-center gap-2">
+            <img src={logo} alt="JobHive Logo" className="w-8 h-8" />
+            <span className="text-xl font-bold">JobHive</span>
+          </Link>
+        </div>
+
+        <div className="flex-grow flex flex-col justify-center max-w-md mx-auto w-full">
+          <h1 className="text-2xl font-bold mb-2">Create account.</h1>
+          
+          <p className="text-gray-600 text-sm mb-6">
+            Already have an account?{' '}
+            <Link href="/login" className="text-[#F6C500] hover:underline">
+              Log in
+            </Link>
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="flex gap-4 mb-4">
+              <Select 
+                value={accountType} 
+                onValueChange={setAccountType}
+              >
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Select account type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="student">Student/Job Seeker</SelectItem>
+                  <SelectItem value="employer">Employer</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                placeholder="Full Name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+                className="h-12"
+              />
+              <Input
+                placeholder="Username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="h-12"
+              />
+            </div>
+
+            <div>
+              <Input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="h-12"
+              />
+            </div>
+
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="h-12"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <i className="fas fa-eye-slash"></i>
+                ) : (
+                  <i className="fas fa-eye"></i>
+                )}
+              </button>
+            </div>
+
+            <div className="relative">
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="h-12"
+              />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <i className="fas fa-eye-slash"></i>
+                ) : (
+                  <i className="fas fa-eye"></i>
+                )}
+              </button>
+            </div>
+
+            <div className="flex items-start space-x-2">
+              <Checkbox
+                id="terms"
+                checked={agreeTerms}
+                onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
+                className="mt-1"
+              />
+              <label
+                htmlFor="terms"
+                className="text-sm text-gray-500 leading-tight"
+              >
+                I've read and agree with your{' '}
+                <Link href="/terms" className="text-[#F6C500] hover:underline">
+                  Terms of Services
+                </Link>
+              </label>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-12 font-medium"
+              style={{ backgroundColor: "#F6C500", color: "#000000" }}
+              disabled={!agreeTerms}
+            >
+              Create Account <i className="fas fa-arrow-right ml-2"></i>
+            </Button>
+          </form>
+
+          <div className="my-6 flex items-center">
+            <div className="flex-grow border-t border-gray-200"></div>
+            <span className="mx-4 text-sm text-gray-400">or</span>
+            <div className="flex-grow border-t border-gray-200"></div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Button variant="outline" className="h-12">
+              <i className="fab fa-facebook-f mr-2 text-blue-600"></i> Sign up with Facebook
+            </Button>
+            <Button variant="outline" className="h-12">
+              <i className="fab fa-google mr-2 text-red-500"></i> Sign up with Google
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Section - Statistics and Image */}
+      <div className="hidden md:flex md:w-1/2 bg-[#F5F7FF] p-12 lg:p-16 flex-col">
+        <div className="flex-grow flex flex-col justify-center items-center">
+          <div className="max-w-md">
+            <div className="mb-12">
+              <img 
+                src="https://cdn.pixabay.com/photo/2019/10/09/07/28/development-4536630_1280.png" 
+                alt="People searching for jobs" 
+                className="w-full"
+              />
+            </div>
+
+            <h2 className="text-2xl font-bold mb-10">
+              Over 1,75,324 candidates waiting for good employees.
+            </h2>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-[#0A0F23] p-4 rounded-md flex flex-col items-center text-white">
+                <div className="w-10 h-10 flex items-center justify-center mb-2">
+                  <i className="fas fa-briefcase"></i>
+                </div>
+                <div className="font-bold"></div>
+                <div className="text-xs"></div>
+              </div>
+              <div className="bg-[#0A0F23] p-4 rounded-md flex flex-col items-center text-white">
+                <div className="w-10 h-10 flex items-center justify-center mb-2">
+                  <i className="fas fa-building"></i>
+                </div>
+                <div className="font-bold"></div>
+                <div className="text-xs"></div>
+              </div>
+              <div className="bg-[#0A0F23] p-4 rounded-md flex flex-col items-center text-white">
+                <div className="w-10 h-10 flex items-center justify-center mb-2">
+                  <i className="fas fa-briefcase"></i>
+                </div>
+                <div className="font-bold"></div>
+                <div className="text-xs"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Register;
