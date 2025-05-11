@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Link, useLocation } from 'wouter';
 import { useUser } from '@/contexts/UserContext';
+import { useToast } from '@/hooks/use-toast';
 import logo from '@/assets/logo.svg';
 
 /**
@@ -17,8 +18,10 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const [, navigate] = useLocation();
   const { login, isAuthenticated } = useUser();
+  const { toast } = useToast();
 
   // Set page title
   useEffect(() => {

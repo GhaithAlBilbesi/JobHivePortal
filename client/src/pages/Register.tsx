@@ -23,8 +23,17 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [, navigate] = useLocation();
   const { register, isAuthenticated } = useUser();
+  
+  // Password validation rules
+  const [passwordValidation, setPasswordValidation] = useState({
+    length: false,
+    lowercase: false,
+    uppercase: false,
+    symbol: false
+  });
 
   // Set page title
   useEffect(() => {
@@ -37,18 +46,56 @@ const Register = () => {
       navigate('/dashboard');
     }
   }, [isAuthenticated, navigate]);
+  
+  // Validate password as user types
+  useEffect(() => {
+    // Check minimum length
+    const hasMinLength = password.length >= 8;
+    
+    // Check for lowercase letter
+    const hasLowercase = /[a-z]/.test(password);
+    
+    // Check for uppercase letter
+    const hasUppercase = /[A-Z]/.test(password);
+    
+    // Check for symbol
+    const hasSymbol = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
+    
+    // Update validation state
+    setPasswordValidation({
+      length: hasMinLength,
+      lowercase: hasLowercase,
+      uppercase: hasUppercase,
+      symbol: hasSymbol
+    });
+    
+    // Reset error when password changes
+    setPasswordError(null);
+  }, [password]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      setPasswordError('Passwords do not match');
       return;
     }
     
     if (!agreeTerms) {
       alert('You must agree to the Terms of Service');
+      return;
+    }
+    
+    // Check password requirements
+    const allRequirementsMet = 
+      passwordValidation.length && 
+      passwordValidation.lowercase && 
+      passwordValidation.uppercase && 
+      passwordValidation.symbol;
+    
+    if (!allRequirementsMet) {
+      setPasswordError('Password does not meet all requirements');
       return;
     }
     
@@ -142,26 +189,50 @@ const Register = () => {
               />
             </div>
 
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="h-12"
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <i className="fas fa-eye-slash"></i>
-                ) : (
-                  <i className="fas fa-eye"></i>
-                )}
-              </button>
+            <div>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className={`h-12 ${passwordError ? 'border-red-500' : ''}`}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <i className="fas fa-eye-slash"></i>
+                  ) : (
+                    <i className="fas fa-eye"></i>
+                  )}
+                </button>
+              </div>
+              
+              {/* Password Requirements */}
+              <div className="mt-2 text-xs space-y-1">
+                <div className="text-gray-500 mb-1">Password requirements:</div>
+                <div className={`flex items-center ${passwordValidation.length ? 'text-green-500' : 'text-gray-400'}`}>
+                  <i className={`fas fa-${passwordValidation.length ? 'check' : 'times'} mr-2`}></i>
+                  At least 8 characters
+                </div>
+                <div className={`flex items-center ${passwordValidation.lowercase ? 'text-green-500' : 'text-gray-400'}`}>
+                  <i className={`fas fa-${passwordValidation.lowercase ? 'check' : 'times'} mr-2`}></i>
+                  One lowercase letter
+                </div>
+                <div className={`flex items-center ${passwordValidation.uppercase ? 'text-green-500' : 'text-gray-400'}`}>
+                  <i className={`fas fa-${passwordValidation.uppercase ? 'check' : 'times'} mr-2`}></i>
+                  One uppercase letter
+                </div>
+                <div className={`flex items-center ${passwordValidation.symbol ? 'text-green-500' : 'text-gray-400'}`}>
+                  <i className={`fas fa-${passwordValidation.symbol ? 'check' : 'times'} mr-2`}></i>
+                  One symbol
+                </div>
+                {passwordError && <div className="text-red-500 mt-1">{passwordError}</div>}
+              </div>
             </div>
 
             <div className="relative">
@@ -171,7 +242,7 @@ const Register = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="h-12"
+                className={`h-12 ${password !== confirmPassword && confirmPassword.length > 0 ? 'border-red-500' : ''}`}
               />
               <button
                 type="button"
@@ -184,6 +255,9 @@ const Register = () => {
                   <i className="fas fa-eye"></i>
                 )}
               </button>
+              {password !== confirmPassword && confirmPassword.length > 0 && (
+                <div className="text-red-500 text-xs mt-1">Passwords do not match</div>
+              )}
             </div>
 
             <div className="flex items-start space-x-2">
@@ -208,7 +282,15 @@ const Register = () => {
               type="submit"
               className="w-full h-12 font-medium"
               style={{ backgroundColor: "#F6C500", color: "#000000" }}
-              disabled={!agreeTerms}
+              disabled={
+                !agreeTerms || 
+                !passwordValidation.length || 
+                !passwordValidation.lowercase || 
+                !passwordValidation.uppercase || 
+                !passwordValidation.symbol || 
+                password !== confirmPassword || 
+                !password
+              }
             >
               Create Account <i className="fas fa-arrow-right ml-2"></i>
             </Button>
