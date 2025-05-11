@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 /**
  * Footer Component
@@ -7,6 +7,19 @@ import { Link } from "wouter";
  * Features responsive design with multi-column layout
  */
 const Footer = () => {
+  const [, setLocation] = useLocation();
+  
+  // Handler for navigating to a new page and scrolling to top
+  const handleNavigate = (path: string) => {
+    // Change location
+    setLocation(path);
+    // Scroll to the top of the page
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+  
   // Quick Links for the footer
   const quickLinks = [
     { label: "Home", path: "/" },
@@ -38,12 +51,15 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo and About */}
           <div>
-            <div className="flex items-center mb-4">
+            <button 
+              onClick={() => handleNavigate("/")} 
+              className="flex items-center mb-4 focus:outline-none"
+            >
               <div className="w-10 h-10 bg-[#F6C500] rounded-lg flex items-center justify-center mr-2">
                 <i className="fas fa-bug text-black text-xl"></i>
               </div>
               <span className="text-2xl font-bold text-white">Job<span className="text-[#F6C500]">Hive</span></span>
-            </div>
+            </button>
             <p className="text-gray-400 mb-4">
               Connecting students and fresh graduates with their dream career opportunities.
             </p>
@@ -67,12 +83,12 @@ const Footer = () => {
             <ul className="space-y-2">
               {quickLinks.map((link, index) => (
                 <li key={index}>
-                  <Link 
-                    href={link.path} 
-                    className="text-gray-400 hover:text-[#F6C500] transition-colors duration-200"
+                  <button 
+                    onClick={() => handleNavigate(link.path)}
+                    className="text-gray-400 hover:text-[#F6C500] transition-colors duration-200 text-left"
                   >
                     {link.label}
-                  </Link>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -84,12 +100,12 @@ const Footer = () => {
             <ul className="space-y-2">
               {jobCategories.map((category, index) => (
                 <li key={index}>
-                  <Link 
-                    href={category.path} 
-                    className="text-gray-400 hover:text-[#F6C500] transition-colors duration-200"
+                  <button 
+                    onClick={() => handleNavigate(category.path)}
+                    className="text-gray-400 hover:text-[#F6C500] transition-colors duration-200 text-left"
                   >
                     {category.label}
-                  </Link>
+                  </button>
                 </li>
               ))}
             </ul>

@@ -23,9 +23,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const isMobile = useMediaQuery("(max-width: 1023px)");
   const { user, isAuthenticated, logout, isRole } = useUser();
+  
+  // Function to navigate and scroll to top
+  const handleNavigate = (path: string) => {
+    setLocation(path);
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
 
   // Handle scroll event to shrink header
   useEffect(() => {
@@ -75,12 +84,18 @@ const Header = () => {
   const renderNavigationLinks = () => {
     const commonLinks = (
       <>
-        <Link href="/" className={`font-medium ${isActive("/")} hover:text-[#F6C500] transition-colors duration-200`}>
+        <button 
+          onClick={() => handleNavigate("/")} 
+          className={`font-medium ${isActive("/")} hover:text-[#F6C500] transition-colors duration-200`}
+        >
           Home
-        </Link>
-        <Link href="/jobs" className={`font-medium ${isActive("/jobs")} hover:text-[#F6C500] transition-colors duration-200`}>
+        </button>
+        <button 
+          onClick={() => handleNavigate("/jobs")} 
+          className={`font-medium ${isActive("/jobs")} hover:text-[#F6C500] transition-colors duration-200`}
+        >
           Jobs
-        </Link>
+        </button>
       </>
     );
 
@@ -93,12 +108,18 @@ const Header = () => {
       return (
         <>
           {commonLinks}
-          <Link href="/resume-builder" className={`font-medium ${isActive("/resume-builder")} hover:text-[#F6C500] transition-colors duration-200`}>
+          <button 
+            onClick={() => handleNavigate("/resume-builder")} 
+            className={`font-medium ${isActive("/resume-builder")} hover:text-[#F6C500] transition-colors duration-200`}
+          >
             Resume Builder
-          </Link>
-          <Link href="/dashboard" className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] transition-colors duration-200`}>
+          </button>
+          <button 
+            onClick={() => handleNavigate("/dashboard")} 
+            className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] transition-colors duration-200`}
+          >
             Dashboard
-          </Link>
+          </button>
         </>
       );
     }
@@ -107,12 +128,18 @@ const Header = () => {
       return (
         <>
           {commonLinks}
-          <Link href="/dashboard" className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] transition-colors duration-200`}>
+          <button 
+            onClick={() => handleNavigate("/dashboard")} 
+            className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] transition-colors duration-200`}
+          >
             Dashboard
-          </Link>
-          <Link href="/post-job" className={`font-medium ${isActive("/post-job")} hover:text-[#F6C500] transition-colors duration-200`}>
+          </button>
+          <button 
+            onClick={() => handleNavigate("/post-job")} 
+            className={`font-medium ${isActive("/post-job")} hover:text-[#F6C500] transition-colors duration-200`}
+          >
             Post Job
-          </Link>
+          </button>
         </>
       );
     }
@@ -121,9 +148,12 @@ const Header = () => {
       return (
         <>
           {commonLinks}
-          <Link href="/admin" className={`font-medium ${isActive("/admin")} hover:text-[#F6C500] transition-colors duration-200`}>
+          <button 
+            onClick={() => handleNavigate("/admin")} 
+            className={`font-medium ${isActive("/admin")} hover:text-[#F6C500] transition-colors duration-200`}
+          >
             Admin Panel
-          </Link>
+          </button>
         </>
       );
     }
@@ -136,12 +166,12 @@ const Header = () => {
       <header className={`fixed top-0 left-0 w-full bg-white z-50 transition-all duration-300 ${isScrolled ? 'header-shrink h-[70px]' : 'h-20'}`}>
         <div className="container h-full flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <button onClick={() => handleNavigate("/")} className="flex items-center focus:outline-none">
             <div className="w-10 h-10 bg-[#F6C500] rounded-lg flex items-center justify-center mr-2">
               <span role="img" aria-label="bee" className="text-xl">🐝</span>
             </div>
             <span className="text-2xl font-bold">Job<span className="text-[#F6C500]">Hive</span></span>
-          </Link>
+          </button>
           
           {/* Mobile Menu Button */}
           {isMobile && (
