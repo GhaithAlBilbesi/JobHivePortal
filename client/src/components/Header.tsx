@@ -195,16 +195,16 @@ const Header = () => {
                   <Button 
                     style={{ backgroundColor: "#F6C500", color: "#000000" }} 
                     className="rounded-full transition-colors duration-200"
-                    asChild
+                    onClick={() => handleNavigate("/login")}
                   >
-                    <Link href="/login">Sign In</Link>
+                    Sign In
                   </Button>
                   <Button 
                     variant="outline" 
                     className="border-2 border-[#F6C500] text-black rounded-full hover:bg-[#FFFBEA] transition-colors duration-200"
-                    asChild
+                    onClick={() => handleNavigate("/register")}
                   >
-                    <Link href="/register">Sign Up</Link>
+                    Sign Up
                   </Button>
                 </div>
               ) : (
@@ -221,11 +221,17 @@ const Header = () => {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem className="cursor-pointer" asChild>
-                      <Link href="/dashboard">Dashboard</Link>
+                    <DropdownMenuItem 
+                      className="cursor-pointer" 
+                      onClick={() => handleNavigate("/dashboard")}
+                    >
+                      Dashboard
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer" asChild>
-                      <Link href="/profile">My Profile</Link>
+                    <DropdownMenuItem 
+                      className="cursor-pointer" 
+                      onClick={() => handleNavigate("/profile")}
+                    >
+                      My Profile
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="cursor-pointer text-red-600" onClick={handleLogout}>
@@ -243,51 +249,75 @@ const Header = () => {
           <nav className={`bg-white w-full border-t border-gray-200 transition-all duration-300 ${isMenuOpen ? 'block' : 'hidden'}`}>
             <div className="container px-4 py-3 flex flex-col space-y-3">
               {/* Home and Jobs links always visible */}
-              <Link href="/" className={`font-medium ${isActive("/")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
+              <button 
+                onClick={() => handleNavigate("/")} 
+                className={`font-medium ${isActive("/")} hover:text-[#F6C500] py-2 transition-colors duration-200 text-left w-full`}
+              >
                 Home
-              </Link>
-              <Link href="/jobs" className={`font-medium ${isActive("/jobs")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
+              </button>
+              <button 
+                onClick={() => handleNavigate("/jobs")} 
+                className={`font-medium ${isActive("/jobs")} hover:text-[#F6C500] py-2 transition-colors duration-200 text-left w-full`}
+              >
                 Jobs
-              </Link>
+              </button>
               
               {/* Conditional links based on authentication and role */}
               {isAuthenticated && (
                 <>
                   {isRole('student') && (
                     <>
-                      <Link href="/resume-builder" className={`font-medium ${isActive("/resume-builder")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
+                      <button 
+                        onClick={() => handleNavigate("/resume-builder")} 
+                        className={`font-medium ${isActive("/resume-builder")} hover:text-[#F6C500] py-2 transition-colors duration-200 text-left w-full`}
+                      >
                         Resume Builder
-                      </Link>
-                      <Link href="/dashboard" className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
+                      </button>
+                      <button 
+                        onClick={() => handleNavigate("/dashboard")} 
+                        className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] py-2 transition-colors duration-200 text-left w-full`}
+                      >
                         Dashboard
-                      </Link>
+                      </button>
                     </>
                   )}
                   
                   {isRole('employer') && (
                     <>
-                      <Link href="/dashboard" className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
+                      <button 
+                        onClick={() => handleNavigate("/dashboard")} 
+                        className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] py-2 transition-colors duration-200 text-left w-full`}
+                      >
                         Dashboard
-                      </Link>
-                      <Link href="/post-job" className={`font-medium ${isActive("/post-job")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
+                      </button>
+                      <button 
+                        onClick={() => handleNavigate("/post-job")} 
+                        className={`font-medium ${isActive("/post-job")} hover:text-[#F6C500] py-2 transition-colors duration-200 text-left w-full`}
+                      >
                         Post Job
-                      </Link>
+                      </button>
                     </>
                   )}
                   
                   {isRole('admin') && (
-                    <Link href="/admin" className={`font-medium ${isActive("/admin")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
+                    <button 
+                      onClick={() => handleNavigate("/admin")} 
+                      className={`font-medium ${isActive("/admin")} hover:text-[#F6C500] py-2 transition-colors duration-200 text-left w-full`}
+                    >
                       Admin Panel
-                    </Link>
+                    </button>
                   )}
                   
-                  <Link href="/profile" className={`font-medium ${isActive("/profile")} hover:text-[#F6C500] py-2 transition-colors duration-200`}>
+                  <button 
+                    onClick={() => handleNavigate("/profile")} 
+                    className={`font-medium ${isActive("/profile")} hover:text-[#F6C500] py-2 transition-colors duration-200 text-left w-full`}
+                  >
                     My Profile
-                  </Link>
+                  </button>
                   
                   <button 
                     onClick={handleLogout}
-                    className="font-medium text-red-600 hover:text-red-700 py-2 text-left transition-colors duration-200"
+                    className="font-medium text-red-600 hover:text-red-700 py-2 text-left transition-colors duration-200 w-full"
                   >
                     Logout
                   </button>
@@ -300,16 +330,16 @@ const Header = () => {
                   <Button 
                     style={{ backgroundColor: "#F6C500", color: "#000000" }} 
                     className="rounded-full w-full transition-colors duration-200"
-                    asChild
+                    onClick={() => handleNavigate("/login")}
                   >
-                    <Link href="/login">Sign In</Link>
+                    Sign In
                   </Button>
                   <Button 
                     variant="outline" 
                     className="border-2 border-[#F6C500] text-black rounded-full w-full hover:bg-[#FFFBEA] transition-colors duration-200"
-                    asChild
+                    onClick={() => handleNavigate("/register")}
                   >
-                    <Link href="/register">Sign Up</Link>
+                    Sign Up
                   </Button>
                 </div>
               )}
