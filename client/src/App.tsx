@@ -2,7 +2,6 @@ import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { UserProvider } from "@/contexts/UserContext";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
@@ -60,17 +59,14 @@ function Router() {
  * Sets up providers for the application:
  * - QueryClientProvider for data fetching
  * - UserProvider for authentication and user management
- * - TooltipProvider for tooltips
  * - Toaster for notifications
  */
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <UserProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <Toaster />
+        <Router />
       </UserProvider>
     </QueryClientProvider>
   );
