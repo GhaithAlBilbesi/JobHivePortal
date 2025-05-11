@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
+import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import JobListings from "@/components/JobListings";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +10,6 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import LoginModal from "@/components/auth/LoginModal";
 
 /**
  * Jobs Page Component
@@ -27,8 +28,9 @@ const JobsPage = () => {
     skills: [] as string[]
   });
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { isAuthenticated } = useUser();
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
 
   // Set page title
   useEffect(() => {
@@ -256,7 +258,12 @@ const JobsPage = () => {
               fullPage={true} 
               onApplyClick={() => {
                 if (!isAuthenticated) {
-                  setIsLoginModalOpen(true);
+                  toast({
+                    title: "Authentication Required",
+                    description: "Please log in to apply for jobs",
+                    variant: "default"
+                  });
+                  navigate("/login");
                   return false; // Prevent further action
                 }
                 return true; // Allow action to continue
@@ -265,13 +272,6 @@ const JobsPage = () => {
           </div>
         </div>
       </div>
-      
-      {/* Login Modal */}
-      <LoginModal 
-        isOpen={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)}
-        action="login"
-      />
     </main>
   );
 };
