@@ -21,7 +21,7 @@ JobHive is a comprehensive job portal designed for students and fresh graduates,
 
 ### Installation
 
-#### Option 1: Using the Setup Script (Recommended)
+#### Option 1: Using the Setup Scripts (Recommended)
 
 1. Clone or download this repository to your local machine
 
@@ -30,11 +30,24 @@ JobHive is a comprehensive job portal designed for students and fresh graduates,
    cd jobhive
    ```
 
-3. Run the setup script:
+3. Run the appropriate setup script:
+   
+   **For Windows:**
+   ```
+   setup.bat
+   ```
+   
+   **For Mac/Linux:**
+   ```
+   ./setup.sh
+   ```
+   
+   **Alternative (all platforms):**
    ```
    node setup.js
    ```
-   This script will check your environment, install dependencies, and guide you through the setup process.
+   
+   These scripts will check your environment, install dependencies, and guide you through the setup process.
 
 4. Start the development server:
    ```
@@ -69,6 +82,10 @@ JobHive is a comprehensive job portal designed for students and fresh graduates,
    ```
    http://localhost:5000
    ```
+
+#### For More Detailed Instructions
+
+See [DOWNLOAD_GUIDE.md](DOWNLOAD_GUIDE.md) for more detailed download and installation instructions.
 
 ## Testing Credentials
 
