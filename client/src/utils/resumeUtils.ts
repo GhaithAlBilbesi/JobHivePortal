@@ -10,30 +10,53 @@ export const generatePDF = async (elementId: string, fileName: string = 'resume.
       throw new Error(`Element with ID ${elementId} not found.`);
     }
 
+    // Temporarily disable any transitions or animations
+    const originalStyles = element.style.cssText;
+    element.style.transition = 'none';
+    element.style.animation = 'none';
+    
+    // Apply optimal styling for PDF generation
+    const oldPadding = element.style.padding;
+    element.style.padding = '20px';
+    
+    // Get the computed style of the element
+    const computedStyle = window.getComputedStyle(element);
+    const originalTransform = computedStyle.transform;
+    
+    // Reset transform for accurate rendering
+    if (originalTransform !== 'none') {
+      element.style.transform = 'none';
+    }
+
     // Convert the HTML element to a canvas
     const canvas = await html2canvas(element, {
       scale: 2, // Higher scale for better quality
       useCORS: true, // Enable loading cross-origin images
       logging: false,
       backgroundColor: '#ffffff',
+      allowTaint: true,
+      windowWidth: 1200, // Set a reasonable window width for consistent rendering
+      windowHeight: element.scrollHeight || 1200, // Use element height if available
     });
 
+    // Restore original styles
+    element.style.cssText = originalStyles;
+    element.style.padding = oldPadding;
+    
     // Calculate the PDF dimensions (A4 paper)
     const imgWidth = 210; // A4 width in mm
     const pageHeight = 297; // A4 height in mm
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    const heightLeft = imgHeight;
-
-    // Create PDF document
+    
+    // Create PDF document with proper dimensions
     const pdf = new jsPDF('p', 'mm', 'a4');
-    const position = 0;
-
-    // Add the canvas as an image to the PDF
+    
+    // Add the canvas as an image to the PDF, centering content if needed
     pdf.addImage(
-      canvas.toDataURL('image/png'), 
+      canvas.toDataURL('image/png', 1.0), // Use higher quality
       'PNG', 
       0, 
-      position, 
+      0, 
       imgWidth, 
       imgHeight
     );
@@ -76,8 +99,16 @@ export const emptyResumeData: ResumeData = {
   ],
   skills: [
     { name: '' },
+    { name: '' },
+    { name: '' },
   ],
-  certifications: [],
+  certifications: [
+    {
+      name: '',
+      issuer: '',
+      date: '',
+    }
+  ],
 };
 
 // Local storage helpers
