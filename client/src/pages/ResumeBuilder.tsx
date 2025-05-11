@@ -316,24 +316,44 @@ const ResumeBuilder = () => {
     try {
       setIsGeneratingPDF(true);
       
-      // Generate PDF with selected template
-      await generatePDF(
-        'resume-to-print', 
-        `${resumeData.firstName.toLowerCase()}_${resumeData.lastName.toLowerCase()}_resume.pdf`
-      );
-      
       toast({
-        title: "PDF Generated",
-        description: "Your resume has been downloaded as a PDF file."
+        title: "Preparing Download",
+        description: "Please wait while we generate your PDF...",
       });
+      
+      // Small delay to ensure the UI is updated before PDF generation starts
+      setTimeout(async () => {
+        try {
+          // Generate filename with proper fallbacks if name fields are empty
+          const firstName = resumeData.firstName || 'My';
+          const lastName = resumeData.lastName || 'Resume';
+          const filename = `${firstName.toLowerCase()}_${lastName.toLowerCase()}_${selectedTemplate}_resume.pdf`;
+          
+          // Generate PDF with selected template
+          await generatePDF('resume-to-print', filename);
+          
+          toast({
+            title: "PDF Generated",
+            description: "Your resume has been downloaded as a PDF file."
+          });
+        } catch (error) {
+          console.error("Error generating PDF:", error);
+          toast({
+            title: "Error",
+            description: "There was an error generating your PDF. Please try again.",
+            variant: "destructive"
+          });
+        } finally {
+          setIsGeneratingPDF(false);
+        }
+      }, 500);
     } catch (error) {
-      console.error("Error generating PDF:", error);
+      console.error("Error in download handler:", error);
       toast({
-        title: "Error",
-        description: "There was an error generating your PDF. Please try again.",
+        title: "Download Failed",
+        description: "There was an unexpected error. Please try again.",
         variant: "destructive"
       });
-    } finally {
       setIsGeneratingPDF(false);
     }
   };
@@ -376,7 +396,11 @@ const ResumeBuilder = () => {
           
           {/* Template Selection Section */}
           <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-6 text-center">Choose a Template</h2>
+            <h2 className="text-2xl font-bold mb-3 text-center">Choose a Template</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto mb-8 text-center">
+              Select a resume template that best matches your personality and career goals. 
+              Each template is designed to highlight different aspects of your professional profile.
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {availableTemplates.map((template) => (
                 <div 
