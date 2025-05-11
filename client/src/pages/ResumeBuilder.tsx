@@ -1,15 +1,34 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useUser } from "@/contexts/UserContext";
-// LoginModal no longer needed - using dedicated login page instead
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { 
+  ModernTemplate, 
+  MinimalTemplate, 
+  availableTemplates, 
+  type ResumeData, 
+  type Education,
+  type Experience,
+  type Skill,
+  type Certification,
+  type TemplateType 
+} from "@/components/resume-templates";
+import { 
+  generatePDF, 
+  emptyResumeData, 
+  saveResumeData, 
+  getResumeData,
+  saveTemplateChoice,
+  getTemplateChoice
+} from "@/utils/resumeUtils";
 
 /**
  * Resume Builder Page
@@ -21,13 +40,31 @@ import { useLocation } from "wouter";
 const ResumeBuilder = () => {
   const { ref: pageRef } = useScrollAnimation();
   const { isAuthenticated, user, isRole } = useUser();
-  // No longer need login modal state
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const previewRef = useRef<HTMLDivElement>(null);
   
-  // Set page title
+  // Resume data state
+  const [resumeData, setResumeData] = useState<ResumeData>(emptyResumeData);
+  const [activeTab, setActiveTab] = useState("personal");
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>('modern');
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  // Set page title and load saved data if available
   useEffect(() => {
     document.title = "Resume Builder - JobHive";
+    
+    // Load saved resume data
+    const savedData = getResumeData();
+    if (savedData) {
+      setResumeData(savedData);
+    }
+    
+    // Load saved template choice
+    const savedTemplate = getTemplateChoice() as TemplateType;
+    if (savedTemplate) {
+      setSelectedTemplate(savedTemplate);
+    }
   }, []);
 
   // Check if user is authenticated and has student role
@@ -43,6 +80,260 @@ const ResumeBuilder = () => {
       }
     }
   }, [isAuthenticated, isRole, navigate, toast]);
+  
+  // Handle input changes for personal information
+  const handlePersonalInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setResumeData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+  };
+  
+  // Handle saving personal information
+  const handleSavePersonalInfo = () => {
+    saveResumeData({
+      firstName: resumeData.firstName,
+      lastName: resumeData.lastName,
+      email: resumeData.email,
+      phone: resumeData.phone,
+      linkedIn: resumeData.linkedIn,
+      summary: resumeData.summary
+    });
+    
+    toast({
+      title: "Personal Information Saved",
+      description: "Your personal information has been saved successfully."
+    });
+    
+    // Move to the next tab
+    setActiveTab("education");
+  };
+  
+  // Handle education changes
+  const handleEducationChange = (index: number, field: keyof Education, value: string) => {
+    setResumeData(prev => {
+      const updatedEducation = [...prev.education];
+      updatedEducation[index] = {
+        ...updatedEducation[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        education: updatedEducation
+      };
+    });
+  };
+  
+  // Add new education entry
+  const addEducation = () => {
+    setResumeData(prev => ({
+      ...prev,
+      education: [
+        ...prev.education,
+        {
+          institution: '',
+          degree: '',
+          startDate: '',
+          endDate: '',
+          relevantCourses: '',
+          achievements: ''
+        }
+      ]
+    }));
+  };
+  
+  // Remove education entry
+  const removeEducation = (index: number) => {
+    if (resumeData.education.length <= 1) {
+      toast({
+        title: "Cannot Remove",
+        description: "You need at least one education entry.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setResumeData(prev => ({
+      ...prev,
+      education: prev.education.filter((_, i) => i !== index)
+    }));
+  };
+  
+  // Handle saving education information
+  const handleSaveEducation = () => {
+    saveResumeData({
+      education: resumeData.education
+    });
+    
+    toast({
+      title: "Education Saved",
+      description: "Your education information has been saved successfully."
+    });
+    
+    // Move to the next tab
+    setActiveTab("experience");
+  };
+  
+  // Handle experience changes
+  const handleExperienceChange = (index: number, field: keyof Experience, value: string) => {
+    setResumeData(prev => {
+      const updatedExperience = [...prev.experience];
+      updatedExperience[index] = {
+        ...updatedExperience[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        experience: updatedExperience
+      };
+    });
+  };
+  
+  // Add new experience entry
+  const addExperience = () => {
+    setResumeData(prev => ({
+      ...prev,
+      experience: [
+        ...prev.experience,
+        {
+          company: '',
+          position: '',
+          startDate: '',
+          endDate: '',
+          description: ''
+        }
+      ]
+    }));
+  };
+  
+  // Remove experience entry
+  const removeExperience = (index: number) => {
+    if (resumeData.experience.length <= 1) {
+      toast({
+        title: "Cannot Remove",
+        description: "You need at least one experience entry.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setResumeData(prev => ({
+      ...prev,
+      experience: prev.experience.filter((_, i) => i !== index)
+    }));
+  };
+  
+  // Handle saving experience information
+  const handleSaveExperience = () => {
+    saveResumeData({
+      experience: resumeData.experience
+    });
+    
+    toast({
+      title: "Experience Saved",
+      description: "Your experience information has been saved successfully."
+    });
+    
+    // Move to the next tab
+    setActiveTab("skills");
+  };
+  
+  // Handle skill changes
+  const handleSkillChange = (index: number, value: string) => {
+    setResumeData(prev => {
+      const updatedSkills = [...prev.skills];
+      updatedSkills[index] = {
+        ...updatedSkills[index],
+        name: value
+      };
+      return {
+        ...prev,
+        skills: updatedSkills
+      };
+    });
+  };
+  
+  // Add new skill
+  const addSkill = () => {
+    setResumeData(prev => ({
+      ...prev,
+      skills: [
+        ...prev.skills,
+        { name: '' }
+      ]
+    }));
+  };
+  
+  // Remove skill
+  const removeSkill = (index: number) => {
+    if (resumeData.skills.length <= 1) {
+      toast({
+        title: "Cannot Remove",
+        description: "You need at least one skill.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setResumeData(prev => ({
+      ...prev,
+      skills: prev.skills.filter((_, i) => i !== index)
+    }));
+  };
+  
+  // Handle saving skills information
+  const handleSaveSkills = () => {
+    saveResumeData({
+      skills: resumeData.skills
+    });
+    
+    toast({
+      title: "Skills Saved",
+      description: "Your skills have been saved successfully."
+    });
+    
+    // Move to the preview tab
+    setActiveTab("preview");
+  };
+  
+  // Handle template selection
+  const handleTemplateSelection = (templateId: TemplateType) => {
+    setSelectedTemplate(templateId);
+    saveTemplateChoice(templateId);
+    
+    toast({
+      title: "Template Selected",
+      description: `You've selected the ${templateId.charAt(0).toUpperCase() + templateId.slice(1)} template.`
+    });
+  };
+  
+  // Handle PDF generation
+  const handleGeneratePDF = async () => {
+    try {
+      setIsGeneratingPDF(true);
+      
+      // Generate PDF with selected template
+      await generatePDF(
+        'resume-to-print', 
+        `${resumeData.firstName.toLowerCase()}_${resumeData.lastName.toLowerCase()}_resume.pdf`
+      );
+      
+      toast({
+        title: "PDF Generated",
+        description: "Your resume has been downloaded as a PDF file."
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast({
+        title: "Error",
+        description: "There was an error generating your PDF. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   // If not authenticated, show login prompt
   if (!isAuthenticated) {
@@ -80,112 +371,37 @@ const ResumeBuilder = () => {
             Highlight your skills, education, and projects in a professional format that stands out to employers.
           </p>
           
-          {/* New Template Selection Section */}
+          {/* Template Selection Section */}
           <div className="mb-12">
             <h2 className="text-2xl font-bold mb-6 text-center">Choose a Template</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {/* Template 1 - Modern */}
-              <div className="border-2 border-[#F6C500] rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow">
-                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
-                  <img 
-                    src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
-                    alt="Modern Resume Template" 
-                    className="w-full h-full object-cover"
-                  />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              {availableTemplates.map((template) => (
+                <div 
+                  key={template.id}
+                  className={`border-2 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow ${
+                    selectedTemplate === template.id 
+                      ? 'border-[#F6C500]' 
+                      : 'border-gray-200 hover:border-[#F6C500]'
+                  }`}
+                  onClick={() => handleTemplateSelection(template.id as TemplateType)}
+                >
+                  <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
+                    <img 
+                      src={template.imageUrl} 
+                      alt={`${template.name} Resume Template`} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <p className="text-center font-medium">{template.name}</p>
                 </div>
-                <p className="text-center font-medium">Modern</p>
-              </div>
-              
-              {/* Template 2 - Minimal */}
-              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
-                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
-                  <img 
-                    src="https://images.unsplash.com/photo-1626197031507-4c3672337971?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
-                    alt="Minimal Resume Template" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p className="text-center font-medium">Minimal</p>
-              </div>
-              
-              {/* Template 3 - Creative */}
-              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
-                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
-                  <img 
-                    src="https://images.unsplash.com/photo-1595085610126-5030f5373c8d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
-                    alt="Creative Resume Template" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p className="text-center font-medium">Creative</p>
-              </div>
-              
-              {/* Template 4 - Professional */}
-              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
-                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
-                  <img 
-                    src="https://images.unsplash.com/photo-1611175694989-4870fafa4494?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
-                    alt="Professional Resume Template" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p className="text-center font-medium">Professional</p>
-              </div>
-              
-              {/* Template 5 - Technical */}
-              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
-                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
-                  <img 
-                    src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
-                    alt="Technical Resume Template" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p className="text-center font-medium">Technical</p>
-              </div>
-              
-              {/* Template 6 - Academic */}
-              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
-                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
-                  <img 
-                    src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
-                    alt="Academic Resume Template" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p className="text-center font-medium">Academic</p>
-              </div>
-              
-              {/* Template 7 - Basic */}
-              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
-                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
-                  <img 
-                    src="https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
-                    alt="Basic Resume Template" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p className="text-center font-medium">Basic</p>
-              </div>
-              
-              {/* Template 8 - Executive */}
-              <div className="border-2 border-gray-200 rounded-lg p-2 cursor-pointer hover:shadow-lg transition-shadow hover:border-[#F6C500]">
-                <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-2">
-                  <img 
-                    src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=500" 
-                    alt="Executive Resume Template" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <p className="text-center font-medium">Executive</p>
-              </div>
+              ))}
             </div>
           </div>
         </div>
 
         <Card className="mb-10 fade-in-up animate-delay-100">
           <CardContent className="p-6">
-            <Tabs defaultValue="personal" className="w-full">
+            <Tabs defaultValue={activeTab} value={activeTab} className="w-full" onValueChange={setActiveTab}>
               <TabsList className="grid grid-cols-1 md:grid-cols-5 mb-8 w-full">
                 <TabsTrigger value="personal">Personal Info</TabsTrigger>
                 <TabsTrigger value="education">Education</TabsTrigger>
@@ -204,32 +420,67 @@ const ResumeBuilder = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" placeholder="Enter your first name" />
+                    <Input 
+                      id="firstName" 
+                      value={resumeData.firstName}
+                      onChange={handlePersonalInfoChange}
+                      placeholder="Enter your first name" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" placeholder="Enter your last name" />
+                    <Input 
+                      id="lastName" 
+                      value={resumeData.lastName}
+                      onChange={handlePersonalInfoChange}
+                      placeholder="Enter your last name" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" placeholder="your.email@example.com" />
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      value={resumeData.email}
+                      onChange={handlePersonalInfoChange}
+                      placeholder="your.email@example.com" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" placeholder="+1 234 567 8900" />
+                    <Input 
+                      id="phone" 
+                      value={resumeData.phone}
+                      onChange={handlePersonalInfoChange}
+                      placeholder="+1 234 567 8900" 
+                    />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="linkedIn">LinkedIn Profile (Optional)</Label>
-                    <Input id="linkedIn" placeholder="https://linkedin.com/in/yourprofile" />
+                    <Input 
+                      id="linkedIn" 
+                      value={resumeData.linkedIn}
+                      onChange={handlePersonalInfoChange}
+                      placeholder="https://linkedin.com/in/yourprofile" 
+                    />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="summary">Professional Summary</Label>
-                    <Textarea id="summary" placeholder="Write a brief professional summary..." rows={4} />
+                    <Textarea 
+                      id="summary" 
+                      value={resumeData.summary}
+                      onChange={handlePersonalInfoChange}
+                      placeholder="Write a brief professional summary..." 
+                      rows={4} 
+                    />
                   </div>
                 </div>
                 
                 <div className="mt-6 flex justify-end">
-                  <Button style={{ backgroundColor: "#F6C500", color: "#000000" }}>
+                  <Button 
+                    style={{ backgroundColor: "#F6C500", color: "#000000" }}
+                    onClick={handleSavePersonalInfo}
+                  >
                     Save & Continue
                   </Button>
                 </div>
@@ -242,98 +493,293 @@ const ResumeBuilder = () => {
                   Add your educational background, starting with the most recent. Include relevant coursework and achievements.
                 </p>
                 
-                <Card className="mb-6 border-dashed">
-                  <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <Label htmlFor="institution">Institution Name</Label>
-                        <Input id="institution" placeholder="University or College Name" />
+                {resumeData.education.map((education, index) => (
+                  <Card key={index} className="mb-6 border-dashed">
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold">Education #{index + 1}</h3>
+                        {resumeData.education.length > 1 && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-red-600 hover:text-red-800" 
+                            onClick={() => removeEducation(index)}
+                          >
+                            Remove
+                          </Button>
+                        )}
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="degree">Degree / Program</Label>
-                        <Input id="degree" placeholder="B.Sc, M.Sc, Diploma, etc." />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor={`institution-${index}`}>Institution Name</Label>
+                          <Input 
+                            id={`institution-${index}`} 
+                            value={education.institution}
+                            onChange={(e) => handleEducationChange(index, 'institution', e.target.value)}
+                            placeholder="University or College Name" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`degree-${index}`}>Degree / Program</Label>
+                          <Input 
+                            id={`degree-${index}`} 
+                            value={education.degree}
+                            onChange={(e) => handleEducationChange(index, 'degree', e.target.value)}
+                            placeholder="B.Sc, M.Sc, Diploma, etc." 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`startDate-${index}`}>Start Date</Label>
+                          <Input 
+                            id={`startDate-${index}`} 
+                            type="month" 
+                            value={education.startDate}
+                            onChange={(e) => handleEducationChange(index, 'startDate', e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`endDate-${index}`}>End Date (or Expected)</Label>
+                          <Input 
+                            id={`endDate-${index}`} 
+                            type="month" 
+                            value={education.endDate}
+                            onChange={(e) => handleEducationChange(index, 'endDate', e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor={`relevantCourses-${index}`}>Relevant Coursework (Optional)</Label>
+                          <Input 
+                            id={`relevantCourses-${index}`} 
+                            value={education.relevantCourses}
+                            onChange={(e) => handleEducationChange(index, 'relevantCourses', e.target.value)}
+                            placeholder="List relevant courses separated by commas" 
+                          />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor={`achievements-${index}`}>Achievements / Activities (Optional)</Label>
+                          <Textarea 
+                            id={`achievements-${index}`} 
+                            value={education.achievements}
+                            onChange={(e) => handleEducationChange(index, 'achievements', e.target.value)}
+                            placeholder="Describe your academic achievements, clubs, or activities..." 
+                            rows={3} 
+                          />
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="startDate">Start Date</Label>
-                        <Input id="startDate" type="month" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="endDate">End Date (or Expected)</Label>
-                        <Input id="endDate" type="month" />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="relevantCourses">Relevant Coursework (Optional)</Label>
-                        <Input id="relevantCourses" placeholder="List relevant courses separated by commas" />
-                      </div>
-                      <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="achievements">Achievements / Activities (Optional)</Label>
-                        <Textarea id="achievements" placeholder="Describe your academic achievements, clubs, or activities..." rows={3} />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                ))}
                 
-                <Button style={{ backgroundColor: "#FFFBEA", color: "#000000", border: "1px dashed #F6C500" }} className="w-full mb-6">
+                <Button 
+                  style={{ backgroundColor: "#FFFBEA", color: "#000000", border: "1px dashed #F6C500" }} 
+                  className="w-full mb-6"
+                  onClick={addEducation}
+                >
                   <i className="fas fa-plus mr-2"></i> Add Another Education
                 </Button>
                 
                 <div className="mt-6 flex justify-between">
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setActiveTab("personal")}
+                  >
                     Previous: Personal Info
                   </Button>
-                  <Button style={{ backgroundColor: "#F6C500", color: "#000000" }}>
+                  <Button 
+                    style={{ backgroundColor: "#F6C500", color: "#000000" }}
+                    onClick={handleSaveEducation}
+                  >
                     Save & Continue
                   </Button>
                 </div>
               </TabsContent>
               
-              {/* Other tabs would be implemented similarly */}
+              {/* Experience Tab */}
               <TabsContent value="experience" className="mt-4">
                 <h2 className="text-2xl font-bold mb-4">Experience</h2>
                 <p className="mb-6 text-gray-600">
                   Add your work experience, internships, or volunteer work. For students, include projects or part-time jobs.
                 </p>
-                {/* Experience form fields would go here */}
+                
+                {resumeData.experience.map((experience, index) => (
+                  <Card key={index} className="mb-6 border-dashed">
+                    <CardContent className="p-6">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold">Experience #{index + 1}</h3>
+                        {resumeData.experience.length > 1 && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-red-600 hover:text-red-800" 
+                            onClick={() => removeExperience(index)}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label htmlFor={`company-${index}`}>Company / Organization</Label>
+                          <Input 
+                            id={`company-${index}`} 
+                            value={experience.company}
+                            onChange={(e) => handleExperienceChange(index, 'company', e.target.value)}
+                            placeholder="Company or Organization Name" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`position-${index}`}>Position / Title</Label>
+                          <Input 
+                            id={`position-${index}`} 
+                            value={experience.position}
+                            onChange={(e) => handleExperienceChange(index, 'position', e.target.value)}
+                            placeholder="Your job title" 
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`expStartDate-${index}`}>Start Date</Label>
+                          <Input 
+                            id={`expStartDate-${index}`} 
+                            type="month" 
+                            value={experience.startDate}
+                            onChange={(e) => handleExperienceChange(index, 'startDate', e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor={`expEndDate-${index}`}>End Date (or Present)</Label>
+                          <Input 
+                            id={`expEndDate-${index}`} 
+                            type="month" 
+                            value={experience.endDate}
+                            onChange={(e) => handleExperienceChange(index, 'endDate', e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor={`description-${index}`}>Description</Label>
+                          <Textarea 
+                            id={`description-${index}`} 
+                            value={experience.description}
+                            onChange={(e) => handleExperienceChange(index, 'description', e.target.value)}
+                            placeholder="Describe your responsibilities, achievements, and skills used..." 
+                            rows={4} 
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                <Button 
+                  style={{ backgroundColor: "#FFFBEA", color: "#000000", border: "1px dashed #F6C500" }} 
+                  className="w-full mb-6"
+                  onClick={addExperience}
+                >
+                  <i className="fas fa-plus mr-2"></i> Add Another Experience
+                </Button>
+                
                 <div className="mt-6 flex justify-between">
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setActiveTab("education")}
+                  >
                     Previous: Education
                   </Button>
-                  <Button style={{ backgroundColor: "#F6C500", color: "#000000" }}>
+                  <Button 
+                    style={{ backgroundColor: "#F6C500", color: "#000000" }}
+                    onClick={handleSaveExperience}
+                  >
                     Save & Continue
                   </Button>
                 </div>
               </TabsContent>
               
+              {/* Skills Tab */}
               <TabsContent value="skills" className="mt-4">
-                <h2 className="text-2xl font-bold mb-4">Skills & Certifications</h2>
+                <h2 className="text-2xl font-bold mb-4">Skills</h2>
                 <p className="mb-6 text-gray-600">
                   List your technical skills, soft skills, languages, and any relevant certifications.
                 </p>
-                {/* Skills form fields would go here */}
+                
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold mb-4">Your Skills</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {resumeData.skills.map((skill, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Input 
+                          value={skill.name}
+                          onChange={(e) => handleSkillChange(index, e.target.value)}
+                          placeholder="Enter a skill (e.g., JavaScript, Project Management)" 
+                        />
+                        {resumeData.skills.length > 1 && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-red-600 hover:text-red-800 flex-shrink-0" 
+                            onClick={() => removeSkill(index)}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <Button 
+                    className="mt-4"
+                    style={{ backgroundColor: "#FFFBEA", color: "#000000", border: "1px dashed #F6C500" }} 
+                    onClick={addSkill}
+                  >
+                    <i className="fas fa-plus mr-2"></i> Add Skill
+                  </Button>
+                </div>
+                
                 <div className="mt-6 flex justify-between">
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setActiveTab("experience")}
+                  >
                     Previous: Experience
                   </Button>
-                  <Button style={{ backgroundColor: "#F6C500", color: "#000000" }}>
+                  <Button 
+                    style={{ backgroundColor: "#F6C500", color: "#000000" }}
+                    onClick={handleSaveSkills}
+                  >
                     Save & Continue
                   </Button>
                 </div>
               </TabsContent>
               
+              {/* Preview Tab */}
               <TabsContent value="preview" className="mt-4">
                 <h2 className="text-2xl font-bold mb-4">Resume Preview</h2>
                 <p className="mb-6 text-gray-600">
                   Preview your resume and make any final adjustments before downloading.
                 </p>
-                <div className="bg-white p-8 border rounded-lg min-h-[500px] mb-6">
-                  <p className="text-center text-gray-400">Resume preview will appear here</p>
+                
+                <div ref={previewRef} className="bg-white p-8 border rounded-lg mb-6 overflow-auto max-h-[800px]">
+                  <div id="resume-to-print">
+                    {/* Display the selected template with resume data */}
+                    {selectedTemplate === 'modern' && (
+                      <ModernTemplate data={resumeData} />
+                    )}
+                    {selectedTemplate === 'minimal' && (
+                      <MinimalTemplate data={resumeData} />
+                    )}
+                  </div>
                 </div>
+                
                 <div className="mt-6 flex justify-between">
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setActiveTab("skills")}
+                  >
                     Previous: Skills
                   </Button>
-                  <Button style={{ backgroundColor: "#F6C500", color: "#000000" }}>
-                    Download PDF
+                  <Button 
+                    disabled={isGeneratingPDF}
+                    style={{ backgroundColor: "#F6C500", color: "#000000" }}
+                    onClick={handleGeneratePDF}
+                  >
+                    {isGeneratingPDF ? 'Generating PDF...' : 'Download PDF'}
                   </Button>
                 </div>
               </TabsContent>
