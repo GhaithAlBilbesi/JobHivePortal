@@ -31,7 +31,7 @@ const EmployerCTA = () => {
                 className="bg-black text-white rounded-full font-bold hover:bg-gray-800 transition-all duration-200"
                 asChild
               >
-                <Link href="/for-employers">Post a Job</Link>
+                <Link href="/post-job">Post a Job</Link>
               </Button>
               <Button 
                 variant="outline" 
