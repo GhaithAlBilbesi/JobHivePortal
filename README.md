@@ -50,6 +50,20 @@ JobHive is a comprehensive job portal designed for students and fresh graduates,
    These scripts will check your environment, install dependencies, and guide you through the setup process.
 
 4. Start the development server:
+   
+   **Option A: Using start scripts**
+   
+   For Windows:
+   ```
+   start.bat
+   ```
+   
+   For Mac/Linux:
+   ```
+   ./start.sh
+   ```
+   
+   **Option B: Using npm**
    ```
    npm run dev
    ```
@@ -74,6 +88,20 @@ JobHive is a comprehensive job portal designed for students and fresh graduates,
    ```
 
 4. Start the development server:
+   
+   **Option A: Using start scripts**
+   
+   For Windows:
+   ```
+   start.bat
+   ```
+   
+   For Mac/Linux:
+   ```
+   ./start.sh
+   ```
+   
+   **Option B: Using npm**
    ```
    npm run dev
    ```

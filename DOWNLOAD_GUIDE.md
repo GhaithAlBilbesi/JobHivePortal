@@ -29,7 +29,9 @@ After downloading the project, you have two options for installation:
 
 1. Double-click the `setup.bat` file
 2. Follow the on-screen instructions
-3. After setup completes, run `npm run dev` to start the application
+3. After setup completes, you can start the application by:
+   - Running the start script: Double-click `start.bat`
+   - Or manually: Run `npm run dev` in the command prompt
 
 ### For Mac/Linux Users:
 
@@ -43,7 +45,9 @@ After downloading the project, you have two options for installation:
    ```bash
    ./setup.sh
    ```
-5. After setup completes, run `npm run dev` to start the application
+5. After setup completes, you can start the application by:
+   - Running the start script: `./start.sh`
+   - Or manually: Run `npm run dev` in the terminal
 
 ## Manual Installation (Alternative)
 
