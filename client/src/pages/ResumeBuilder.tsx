@@ -797,7 +797,7 @@ const ResumeBuilder = () => {
                 <div ref={previewRef} className="bg-gray-100 p-8 border rounded-lg mb-6 overflow-auto max-h-[800px]">
                   <div 
                     id="resume-to-print" 
-                    className="mx-auto max-w-[800px] shadow-xl"
+                    className={`mx-auto max-w-[800px] shadow-xl ${selectedTemplate}-template`}
                     style={{ 
                       width: '21cm', 
                       minHeight: '29.7cm', 
