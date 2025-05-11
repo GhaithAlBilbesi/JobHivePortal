@@ -2,6 +2,9 @@ import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Job } from "./JobListings";
+import { useUser } from "@/contexts/UserContext";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 /**
  * Job Card Component Props
@@ -26,6 +29,9 @@ interface JobCardProps {
  */
 const JobCard = ({ job, animationDelay = 0, onApply }: JobCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  const { isAuthenticated, isRole } = useUser();
+  const { toast } = useToast();
+  const [, navigate] = useLocation();
   
   // Format posted date to "X days ago" format
   const getPostedDate = () => {
@@ -39,6 +45,41 @@ const JobCard = ({ job, animationDelay = 0, onApply }: JobCardProps) => {
     if (diffDays === 0) return "Posted today";
     if (diffDays === 1) return "Posted yesterday";
     return `Posted ${diffDays} days ago`;
+  };
+  
+  // Handle job application with role-based restriction
+  const handleApply = () => {
+    if (!isAuthenticated) {
+      // If user is not logged in, redirect to login page
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to apply for jobs",
+        variant: "default"
+      });
+      navigate("/login");
+      return;
+    }
+    
+    // Check if the user is a student (only students can apply)
+    if (!isRole('student')) {
+      toast({
+        title: "Action Restricted",
+        description: "Only student accounts can apply for jobs",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // If user is authenticated and has student role, proceed with application
+    if (onApply) {
+      onApply();
+    } else {
+      toast({
+        title: "Application Submitted",
+        description: "Your application has been submitted successfully!",
+        variant: "default"
+      });
+    }
   };
   
   return (
@@ -90,7 +131,7 @@ const JobCard = ({ job, animationDelay = 0, onApply }: JobCardProps) => {
           <Button 
             className="rounded-full"
             style={{ backgroundColor: "#F6C500", color: "#000000" }}
-            onClick={onApply}
+            onClick={handleApply}
           >
             Apply Now
           </Button>

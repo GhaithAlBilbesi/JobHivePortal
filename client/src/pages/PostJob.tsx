@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useUser } from "@/contexts/UserContext";
-import LoginModal from "@/components/auth/LoginModal";
+// No longer need login modal
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
@@ -20,7 +20,7 @@ import { useLocation } from "wouter";
 const PostJob = () => {
   const { ref: pageRef } = useScrollAnimation();
   const { isAuthenticated, user, isRole } = useUser();
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  // No longer need login modal state
   const { toast } = useToast();
   const [, navigate] = useLocation();
   
@@ -56,7 +56,7 @@ const PostJob = () => {
             </p>
             <Button 
               style={{ backgroundColor: "#F6C500", color: "#000000" }}
-              onClick={() => setIsLoginModalOpen(true)}
+              onClick={() => navigate("/login")}
               size="lg"
             >
               Sign In to Post a Job
@@ -88,17 +88,7 @@ const PostJob = () => {
               </div>
             </div>
           </div>
-          <LoginModal 
-            isOpen={isLoginModalOpen} 
-            onClose={() => setIsLoginModalOpen(false)} 
-            action="login"
-            afterLogin={() => {
-              toast({
-                title: "Welcome!",
-                description: "You can now post job opportunities."
-              });
-            }}
-          />
+          {/* Login modal removed - now using dedicated login page */}
         </div>
       </main>
     );
