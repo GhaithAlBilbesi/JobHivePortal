@@ -37,20 +37,37 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoginError(null);
+    
     try {
       // Attempt to log in with the provided credentials
       const success = await login(email, password);
       
       if (success) {
-        // If login is successful, redirect to dashboard or homepage
+        // If login is successful, show toast and redirect to dashboard
+        toast({
+          title: "Login Successful",
+          description: "Welcome back to JobHive!",
+          variant: "default"
+        });
         navigate('/dashboard');
       } else {
-        // If login fails, show an alert (in a real app, you'd use a toast notification)
-        alert('Invalid email or password. Please try again.');
+        // If login fails, show toast notification
+        setLoginError('Invalid email or password');
+        toast({
+          title: "Login Failed",
+          description: "Invalid email or password. Please try again.",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert('An error occurred during login. Please try again.');
+      setLoginError('An error occurred during login');
+      toast({
+        title: "Error",
+        description: "An error occurred during login. Please try again.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -81,32 +98,41 @@ const Login = () => {
                 type="email"
                 placeholder="Email address"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setLoginError(null); // Clear error when email changes
+                }}
                 required
-                className="h-12"
+                className={`h-12 ${loginError ? 'border-red-500' : ''}`}
               />
             </div>
 
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="h-12"
-              />
-              <button
-                type="button"
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <i className="fas fa-eye-slash"></i>
-                ) : (
-                  <i className="fas fa-eye"></i>
-                )}
-              </button>
+            <div className="space-y-1">
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setLoginError(null); // Clear error when password changes
+                  }}
+                  required
+                  className={`h-12 ${loginError ? 'border-red-500' : ''}`}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <i className="fas fa-eye-slash"></i>
+                  ) : (
+                    <i className="fas fa-eye"></i>
+                  )}
+                </button>
+              </div>
+              {loginError && <div className="text-red-500 text-xs">{loginError}</div>}
             </div>
 
             <div className="flex items-center justify-between">
