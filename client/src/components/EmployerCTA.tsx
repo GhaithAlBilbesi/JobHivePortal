@@ -38,7 +38,7 @@ const EmployerCTA = () => {
                 className="border-2 border-black bg-transparent text-black rounded-full font-bold hover:bg-[#FFFBEA] transition-all duration-200"
                 asChild
               >
-                <Link href="/for-employers">Learn More</Link>
+                <Link href="/register">Learn More</Link>
               </Button>
             </div>
           </div>
