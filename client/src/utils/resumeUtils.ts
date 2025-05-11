@@ -10,56 +10,113 @@ export const generatePDF = async (elementId: string, fileName: string = 'resume.
       throw new Error(`Element with ID ${elementId} not found.`);
     }
 
-    // Temporarily disable any transitions or animations
-    const originalStyles = element.style.cssText;
-    element.style.transition = 'none';
-    element.style.animation = 'none';
+    // Create a clone of the element to avoid modifying the original
+    const clone = element.cloneNode(true) as HTMLElement;
+    clone.id = 'temp-pdf-element';
+    clone.style.width = '210mm';  // A4 width
+    clone.style.minHeight = '297mm'; // A4 height
+    clone.style.position = 'absolute';
+    clone.style.left = '-9999px';
+    clone.style.top = '0';
+    clone.style.zIndex = '-1000';
+    clone.style.margin = '0';
+    clone.style.padding = '20px';
+    clone.style.boxSizing = 'border-box';
+    clone.style.backgroundColor = 'white';
+    clone.style.overflow = 'hidden';
+    clone.style.transition = 'none';
+    clone.style.animation = 'none';
     
-    // Apply optimal styling for PDF generation
-    const oldPadding = element.style.padding;
-    element.style.padding = '20px';
+    // Ensure all backgrounds are printed
+    const allColorElements = clone.querySelectorAll('[class*="bg-"]');
+    allColorElements.forEach(el => {
+      const htmlEl = el as HTMLElement;
+      // Use standard and prefixed property (with a fallback method for type safety)
+      htmlEl.style.setProperty('-webkit-print-color-adjust', 'exact');
+      htmlEl.style.setProperty('print-color-adjust', 'exact');
+      htmlEl.style.setProperty('color-adjust', 'exact');
+    });
     
-    // Get the computed style of the element
-    const computedStyle = window.getComputedStyle(element);
-    const originalTransform = computedStyle.transform;
+    // Add to body temporarily
+    document.body.appendChild(clone);
     
-    // Reset transform for accurate rendering
-    if (originalTransform !== 'none') {
-      element.style.transform = 'none';
-    }
-
-    // Convert the HTML element to a canvas
-    const canvas = await html2canvas(element, {
+    // Ensure page breaks are handled properly
+    const sections = clone.querySelectorAll('section, .section, h1, h2, h3');
+    sections.forEach(section => {
+      (section as HTMLElement).style.pageBreakInside = 'avoid';
+      (section as HTMLElement).style.breakInside = 'avoid';
+    });
+    
+    // Convert the HTML element to a canvas with proper options for quality
+    const canvas = await html2canvas(clone, {
       scale: 2, // Higher scale for better quality
       useCORS: true, // Enable loading cross-origin images
       logging: false,
       backgroundColor: '#ffffff',
       allowTaint: true,
-      windowWidth: 1200, // Set a reasonable window width for consistent rendering
-      windowHeight: element.scrollHeight || 1200, // Use element height if available
+      windowWidth: 794, // A4 width in pixels (aproximately at 96 DPI)
+      windowHeight: 1123, // A4 height in pixels
+      onclone: (clonedDoc) => {
+        // Additional adjustments to the cloned document if needed
+        const clonedElement = clonedDoc.getElementById('temp-pdf-element');
+        if (clonedElement) {
+          // Make sure flex layout is preserved
+          clonedElement.style.display = 'flex';
+          clonedElement.style.flexDirection = 'column';
+        }
+      }
     });
-
-    // Restore original styles
-    element.style.cssText = originalStyles;
-    element.style.padding = oldPadding;
+    
+    // Remove the clone after rendering
+    document.body.removeChild(clone);
     
     // Calculate the PDF dimensions (A4 paper)
     const imgWidth = 210; // A4 width in mm
     const pageHeight = 297; // A4 height in mm
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
-    // Create PDF document with proper dimensions
-    const pdf = new jsPDF('p', 'mm', 'a4');
+    // Create PDF document with proper dimensions and compression
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+      compress: true
+    });
     
-    // Add the canvas as an image to the PDF, centering content if needed
+    // Add the canvas as an image to the PDF
     pdf.addImage(
-      canvas.toDataURL('image/png', 1.0), // Use higher quality
-      'PNG', 
-      0, 
-      0, 
-      imgWidth, 
-      imgHeight
+      canvas.toDataURL('image/jpeg', 0.95), // Use JPEG for smaller file size, high quality
+      'JPEG', 
+      0,  // X position 
+      0,  // Y position
+      imgWidth, // Width
+      imgHeight // Height
     );
+    
+    // Handle multi-page resumes if content exceeds A4 height
+    if (imgHeight > pageHeight) {
+      let remainingHeight = imgHeight;
+      let position = -pageHeight; // Starting position for the second page
+      
+      while (remainingHeight > pageHeight) {
+        // Add new page
+        pdf.addPage();
+        
+        // Add the same image but shifted upward to show the next page worth of content
+        pdf.addImage(
+          canvas.toDataURL('image/jpeg', 0.95),
+          'JPEG',
+          0,
+          position,
+          imgWidth,
+          imgHeight
+        );
+        
+        // Update remaining height and position for next page
+        remainingHeight -= pageHeight;
+        position -= pageHeight;
+      }
+    }
 
     // Save the PDF
     pdf.save(fileName);

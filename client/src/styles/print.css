@@ -2,8 +2,9 @@
 
 /* Global print settings */
 @page {
-  size: A4;
+  size: A4 portrait;
   margin: 0.5in;
+  padding: 0;
 }
 
 @media print {
@@ -36,16 +37,26 @@
   #resume-to-print h3, 
   #resume-to-print h4 {
     page-break-after: avoid;
+    break-after: avoid;
   }
   
   #resume-to-print section, 
   #resume-to-print .section {
     page-break-inside: avoid;
+    break-inside: avoid;
+    position: relative;
+    display: block;
+  }
+  
+  #resume-to-print .section-item {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
   
   #resume-to-print ul, 
   #resume-to-print li {
     page-break-inside: avoid;
+    break-inside: avoid;
   }
   
   /* Hide background patterns and shadows */

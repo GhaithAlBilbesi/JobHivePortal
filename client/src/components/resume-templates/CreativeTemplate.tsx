@@ -26,7 +26,7 @@ const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data }) => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-full print:flex-row" id="resume-to-print">
+    <div className="flex flex-col md:flex-row h-full print:flex-row print:overflow-hidden">
       {/* Sidebar - Creative color accent with skills and contact info */}
       <div className="bg-[#FFDC5E] text-gray-900 p-6 md:w-1/3 print:w-1/3">
         <div className="sticky top-0">
@@ -126,7 +126,7 @@ const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data }) => {
       <div className="bg-white p-6 md:w-2/3 print:w-2/3">
         {/* Summary Section */}
         {data.summary && (
-          <section className="mb-8">
+          <section className="mb-8 section">
             <h2 className="text-lg font-bold uppercase mb-4 text-[#FFB800] border-b pb-1">
               About Me
             </h2>
@@ -136,12 +136,12 @@ const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data }) => {
 
         {/* Experience Section */}
         {data.experience.length > 0 && data.experience[0].company && (
-          <section className="mb-8">
+          <section className="mb-8 section">
             <h2 className="text-lg font-bold uppercase mb-4 text-[#FFB800] border-b pb-1">
               Experience
             </h2>
             {data.experience.map((exp, index) => (
-              <div key={index} className="mb-5">
+              <div key={index} className="mb-5 section-item">
                 {exp.company && (
                   <>
                     <div className="flex flex-wrap justify-between mb-1">
@@ -161,12 +161,12 @@ const CreativeTemplate: React.FC<CreativeTemplateProps> = ({ data }) => {
 
         {/* Education Section */}
         {data.education.length > 0 && data.education[0].institution && (
-          <section>
+          <section className="section">
             <h2 className="text-lg font-bold uppercase mb-4 text-[#FFB800] border-b pb-1">
               Education
             </h2>
             {data.education.map((edu, index) => (
-              <div key={index} className="mb-5">
+              <div key={index} className="mb-5 section-item">
                 {edu.institution && (
                   <>
                     <div className="flex flex-wrap justify-between mb-1">

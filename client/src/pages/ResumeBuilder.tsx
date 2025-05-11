@@ -797,13 +797,14 @@ const ResumeBuilder = () => {
                 <div ref={previewRef} className="bg-gray-100 p-8 border rounded-lg mb-6 overflow-auto max-h-[800px]">
                   <div 
                     id="resume-to-print" 
-                    className={`mx-auto max-w-[800px] shadow-xl ${selectedTemplate}-template`}
+                    className={`mx-auto max-w-[800px] shadow-xl ${selectedTemplate}-template print:shadow-none`}
                     style={{ 
                       width: '21cm', 
                       minHeight: '29.7cm', 
                       backgroundColor: 'white',
                       position: 'relative',
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      boxSizing: 'border-box'
                     }}
                   >
                     {/* Display the selected template with resume data */}
