@@ -1,20 +1,95 @@
-# JobHive - Job Portal for Students and Fresh Graduates
+# 💼 JobHive – Job Portal for Students and Fresh Graduates
 
-JobHive is a modern platform that empowers students and recent graduates by offering personalized job recommendations, resume-building tools, employer-student direct messaging, and more.
+JobHive is a full-stack job portal designed to help students and fresh graduates discover jobs, build resumes, and connect with employers — all in one place.
 
-## Project Overview
+---
 
-This project is the frontend implementation of the JobHive platform, built with React, CSS, and JavaScript. The design follows a clean, modern aesthetic with a focus on usability and responsiveness.
+## 🔍 Project Overview
 
-### Main Features
+JobHive offers personalized job recommendations, a resume builder, job tracking dashboards, and employer messaging.
 
-- Personalized job recommendations
-- Resume-building tools
-- Employer-student direct messaging
-- Filters by skills, location, job type
-- Clean dashboard for job tracking
+This is a **full-stack project**:
 
-## Project Structure
+- 🔧 **Frontend**: React + TypeScript
+- 🔥 **Backend**: Python (Flask), PostgreSQL
+- 📬 **Email Service**: Brevo SMTP
+- 📄 **Resume Parser**: Affinda API
 
-The project follows a modular structure for better organization and maintainability:
+---
 
+## 🗂️ Project Structure
+
+JobHivePortal-1/
+├── client/ # React frontend (Vite + TypeScript)
+├── server/ # Flask backend
+│ ├── app/ # Backend modules (routes, models, config)
+│ ├── uploads/ # Uploaded resume files
+│ ├── run.py # Backend entry point
+│ └── .env.example # Sample environment file
+├── .gitignore
+├── README.md
+
+---
+
+## 🚀 How to Run Locally
+
+### 1. Clone the Repo
+
+```bash
+git clone https://github.com/GhaithAlBilbesi/JobHivePortal.git
+cd JobHivePortal
+
+2. Backend Setup
+cd server
+python -m venv venv
+venv\Scripts\activate           # On Windows
+# source venv/bin/activate     # On macOS/Linux
+
+pip install -r requirements.txt
+cp .env.example .env           # Add your actual credentials
+python run.py
+Runs the backend at: http://localhost:5000
+
+
+3. Frontend Setup
+cd ../client
+npm install
+npm run dev
+Runs the frontend at: http://localhost:5173
+
+🔑 Environment Variables
+Update your .env file based on .env.example inside /server/.
+
+You’ll need:
+
+PostgreSQL DB URL
+JWT secret key
+Brevo email SMTP credentials
+Affinda API key
+
+
+💡 Features
+
+🔍 Job listings with filters (skills, location, job type)
+📄 Resume Builder with export & preview
+📬 Email verification & onboarding
+🧠 Employer job posting & applicant tracking
+👤 Role-based dashboards (Student vs Employer)
+📁 File uploads (CVs)
+🔐 JWT Authentication
+
+🧰 Built With
+Frontend
+React, TypeScript, Tailwind CSS
+
+Backend
+Flask, SQLAlchemy, PostgreSQL
+
+Extras
+Affinda API, Brevo SMTP, JWT, Cloud Deployment Ready
+
+👋 Author
+Made with ❤️ by Ghaith Al Bilbesi
+
+🙋 Contact
+If you’d like to collaborate or hire, connect with me on LinkedIn.
