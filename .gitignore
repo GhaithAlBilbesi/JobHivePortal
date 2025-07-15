@@ -28,3 +28,5 @@ server/uploads/
 *.tar.gz
 *.zip
 .env
+venv/
+server/uploads/
