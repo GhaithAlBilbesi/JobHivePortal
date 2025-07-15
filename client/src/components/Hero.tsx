@@ -59,10 +59,10 @@ const Hero = () => {
             ref={heroImageRef}
           >
             <img 
-              src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=600" 
+              src="/src/assets/hero.png"
               alt="Young professional looking for job opportunities" 
-              className="rounded-lg shadow-xl mx-auto lg:ml-auto" 
-            />
+              className="rounded-lg shadow-xl mx-auto lg:ml-auto w-4/5 translate-y-4 translate-x-12" 
+            /> 
           </div>
         </div>
       </div>

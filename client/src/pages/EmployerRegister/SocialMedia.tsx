@@ -47,10 +47,37 @@ const SocialMedia = () => {
     { icon: <i className="fas fa-phone"></i>, label: "Contact" },
   ];
 
-  const handleNext = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate('/register/employer/contact');
-  };
+  const handleNext = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const storedUser = localStorage.getItem("jobhive_user");
+  const userId = storedUser ? JSON.parse(storedUser).id : null;
+
+  if (!userId) {
+    alert("User ID not found. Are you logged in?");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:5000/api/employer/social-media", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        social_links: socialLinks,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Failed to save social media info");
+    navigate("/register/employer/contact");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to save social media info. Please try again.");
+  }
+};
+
 
   const handlePrevious = () => {
     navigate('/register/employer/founding-info');

@@ -3,6 +3,9 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/use-mobile";
 import { useUser } from "@/contexts/UserContext";
+import { BellIcon } from "lucide-react";
+import { Popover } from "@headlessui/react";
+import { formatDistanceToNow } from "date-fns";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +29,46 @@ const Header = () => {
   const [location, setLocation] = useLocation();
   const isMobile = useMediaQuery("(max-width: 1023px)");
   const { user, isAuthenticated, logout, isRole } = useUser();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationType[]>([]);
+
+  type NotificationType = {
+  id: number;
+  body: string;
+  created_at: string;
+  read: boolean;
+};
+
+
+
+const handleMarkAllRead = async () => {
+  if (!user?.id) return; // 🔒 Type-safe check to avoid error
+
+  try {
+    await fetch(`http://localhost:5000/api/notifications/${user.id}/mark-all-read`, {
+      method: "PATCH",
+    });
+    fetchNotifications(); // ✅ Refresh local state
+  } catch (error) {
+    console.error("Failed to mark notifications as read:", error);
+  }
+};
+
   
+const fetchNotifications = async () => {
+  if (!user?.id) return;
+  try {
+    const res = await fetch(`http://localhost:5000/api/notifications/${user.id}`);
+    const data = await res.json();
+    setNotifications(data.notifications);
+  } catch (err) {
+    console.error("Failed to load notifications:", err);
+  }
+};
+
+useEffect(() => {
+  fetchNotifications();
+}, [user?.id]);
   // Function to navigate and scroll to top
   const handleNavigate = (path: string) => {
     setLocation(path);
@@ -67,6 +109,7 @@ const Header = () => {
 
   const handleLogout = () => {
     logout();
+    setLocation("/");
   };
 
   // Get the user's initials for avatar fallback
@@ -81,68 +124,100 @@ const Header = () => {
   };
 
   // Determine which navigation links to show based on user role
-  const renderNavigationLinks = () => {
-    const commonLinks = (
+const renderNavigationLinks = () => {
+  // Home should be visible ONLY when not logged in
+  const homeLink = !isAuthenticated && (
+    <button 
+      onClick={() => handleNavigate("/")} 
+      className={`font-medium ${isActive("/")} hover:text-[#F6C500] transition-colors duration-200`}
+    >
+      Home
+    </button>
+  );
+
+  const commonLinks = (
+    <>
+      {homeLink}
+      <button 
+        onClick={() => handleNavigate("/jobs")} 
+        className={`font-medium ${isActive("/jobs")} hover:text-[#F6C500] transition-colors duration-200`}
+      >
+        Jobs
+      </button>
+    </>
+  );
+
+  // Now your role-based conditions stay the same...
+  if (!isAuthenticated) return commonLinks;
+
+  if (isRole("job_seeker")) {
+    return (
       <>
-        <button 
-          onClick={() => handleNavigate("/")} 
-          className={`font-medium ${isActive("/")} hover:text-[#F6C500] transition-colors duration-200`}
-        >
-          Home
+        {commonLinks}
+        <button onClick={() => handleNavigate("/resume-builder")} className={`font-medium ${isActive("/resume-builder")} hover:text-[#F6C500] transition-colors duration-200`}>
+          Resume Builder
         </button>
-        <button 
-          onClick={() => handleNavigate("/jobs")} 
-          className={`font-medium ${isActive("/jobs")} hover:text-[#F6C500] transition-colors duration-200`}
-        >
-          Jobs
+        <button onClick={() => handleNavigate("/dashboard")} className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] transition-colors duration-200`}>
+          Dashboard
         </button>
       </>
     );
-
-    // Additional links based on roles
-    if (!isAuthenticated) {
-      return commonLinks;
-    }
-
-    if (isRole('student')) {
-      return (
-        <>
-          {commonLinks}
-          <button 
-            onClick={() => handleNavigate("/resume-builder")} 
-            className={`font-medium ${isActive("/resume-builder")} hover:text-[#F6C500] transition-colors duration-200`}
-          >
-            Resume Builder
-          </button>
-          <button 
-            onClick={() => handleNavigate("/dashboard")} 
-            className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] transition-colors duration-200`}
-          >
-            Dashboard
-          </button>
-        </>
-      );
-    }
+  }
 
     if (isRole('employer')) {
-      return (
-        <>
-          {commonLinks}
-          <button 
-            onClick={() => handleNavigate("/dashboard")} 
-            className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] transition-colors duration-200`}
-          >
-            Dashboard
-          </button>
-          <button 
-            onClick={() => handleNavigate("/post-job")} 
-            className={`font-medium ${isActive("/post-job")} hover:text-[#F6C500] transition-colors duration-200`}
-          >
-            Post Job
-          </button>
-        </>
-      );
-    }
+  return (
+    <>
+      {commonLinks}
+      <button 
+        onClick={() => handleNavigate("/dashboard")} 
+        className={`font-medium ${isActive("/dashboard")} hover:text-[#F6C500] transition-colors duration-200`}
+      >
+        Dashboard
+      </button>
+      <button 
+        onClick={() => handleNavigate("/post-job")} 
+        className={`font-medium ${isActive("/post-job")} hover:text-[#F6C500] transition-colors duration-200`}
+      >
+        Post Job
+      </button>
+    <DropdownMenu onOpenChange={(open) => {
+  if (open) handleMarkAllRead(); // Mark as read when dropdown opens
+}}>
+  <DropdownMenuTrigger asChild>
+    <button
+      className="relative ml-4 hover:text-[#F6C500] transition-colors duration-200"
+      title="Notifications"
+    >
+      <BellIcon className="w-5 h-5" />
+      {notifications.some(n => !n.read) && (
+        <span className="absolute top-0 right-0 inline-flex items-center justify-center w-2 h-2 bg-red-500 rounded-full" />
+      )}
+    </button>
+  </DropdownMenuTrigger>
+
+  <DropdownMenuContent align="end" className="w-80">
+    {notifications.length === 0 ? (
+      <DropdownMenuItem className="text-gray-500">
+        No new notifications
+      </DropdownMenuItem>
+    ) : (
+      notifications.map((notif, index) => (
+        <DropdownMenuItem key={index} className="whitespace-normal break-words text-sm">
+          {notif.body}
+          <span className="block text-xs text-gray-400">
+            {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true })}
+          </span>
+        </DropdownMenuItem>
+      ))
+    )}
+  </DropdownMenuContent>
+</DropdownMenu>
+
+
+    </>
+  );
+}
+
 
     if (isRole('admin')) {
       return (
@@ -167,9 +242,7 @@ const Header = () => {
         <div className="container h-full flex items-center justify-between">
           {/* Logo */}
           <button onClick={() => handleNavigate("/")} className="flex items-center focus:outline-none">
-            <div className="w-10 h-10 bg-[#F6C500] rounded-lg flex items-center justify-center mr-2">
-              <span role="img" aria-label="bee" className="text-xl">🐝</span>
-            </div>
+            <img src="/src/assets/logo1.png" alt="Logo" className="h-10 w-10 mr-2" />
             <span className="text-2xl font-bold">Job<span className="text-[#F6C500]">Hive</span></span>
           </button>
           
@@ -221,18 +294,24 @@ const Header = () => {
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem 
-                      className="cursor-pointer" 
-                      onClick={() => handleNavigate("/dashboard")}
-                    >
-                      Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="cursor-pointer" 
-                      onClick={() => handleNavigate("/profile")}
-                    >
-                      My Profile
-                    </DropdownMenuItem>
+                    {!isRole("admin") && (
+                      <>
+                        <DropdownMenuItem 
+                          className="cursor-pointer" 
+                          onClick={() => handleNavigate("/dashboard")}
+                        >
+                          Dashboard
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="cursor-pointer" 
+                          onClick={() => handleNavigate("/profile")}
+                        >
+                          My Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
+
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="cursor-pointer text-red-600" onClick={handleLogout}>
                       Logout
@@ -249,12 +328,15 @@ const Header = () => {
           <nav className={`bg-white w-full border-t border-gray-200 transition-all duration-300 ${isMenuOpen ? 'block' : 'hidden'}`}>
             <div className="container px-4 py-3 flex flex-col space-y-3">
               {/* Home and Jobs links always visible */}
-              <button 
-                onClick={() => handleNavigate("/")} 
-                className={`font-medium ${isActive("/")} hover:text-[#F6C500] py-2 transition-colors duration-200 text-left w-full`}
-              >
-                Home
-              </button>
+              {!isAuthenticated && (
+                  <button 
+                    onClick={() => handleNavigate("/")} 
+                    className={`font-medium ${isActive("/")} hover:text-[#F6C500] py-2 transition-colors duration-200 text-left w-full`}
+                  >
+                    Home
+                  </button>
+                )}
+
               <button 
                 onClick={() => handleNavigate("/jobs")} 
                 className={`font-medium ${isActive("/jobs")} hover:text-[#F6C500] py-2 transition-colors duration-200 text-left w-full`}
@@ -265,7 +347,7 @@ const Header = () => {
               {/* Conditional links based on authentication and role */}
               {isAuthenticated && (
                 <>
-                  {isRole('student') && (
+                  {isRole('job_seeker') && (
                     <>
                       <button 
                         onClick={() => handleNavigate("/resume-builder")} 

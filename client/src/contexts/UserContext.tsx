@@ -1,9 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useLocation } from "wouter";
+
+
+import axios from 'axios';
 
 /**
  * User role types supported by the application
  */
-export type UserRole = 'student' | 'employer' | 'admin' | null;
+export type UserRole = 'student' | 'job_seeker' | 'employer' | 'admin' | null;
 
 /**
  * User interface defining the structure of a user
@@ -20,6 +24,10 @@ export interface User {
   location?: string;
   website?: string;
   skills?: string[];
+  company_name?: string;
+  logo_url?: string;
+  cv_url?: string;
+  education?: any[]; 
 }
 
 /**
@@ -30,9 +38,22 @@ interface UserContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  register: (userData: Partial<User>, password: string) => Promise<boolean>;
+  // register: (userData: Partial<User>, password: string) => Promise<boolean>;
   updateProfile: (profileData: Partial<User>) => Promise<boolean>;
   isRole: (role: UserRole) => boolean;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
+  sendVerificationCode: (
+  name: string,
+  email: string,
+  password: string,
+  role: string
+) => Promise<boolean>;
+register: (
+  userData: Partial<User>,
+  verificationCode: string
+) => Promise<boolean>;
+
 }
 
 /**
@@ -46,12 +67,17 @@ const defaultUserContext: UserContextType = {
   register: async () => false,
   updateProfile: async () => false,
   isRole: () => false,
+  setUser: () => {},
+  setIsAuthenticated: () => {},
+  sendVerificationCode: async () => false,
+
 };
 
 /**
  * Create the user context with default values
  */
 const UserContext = createContext<UserContextType>(defaultUserContext);
+
 
 /**
  * Props for the UserProvider component
@@ -60,53 +86,7 @@ interface UserProviderProps {
   children: ReactNode;
 }
 
-/**
- * Mock user data for testing different roles
- */
-const MOCK_USERS = [
-  {
-    id: '1',
-    email: 'student@jobhive.com',
-    name: 'Student User',
-    password: 'password123',
-    role: 'student' as UserRole,
-    profilePicture: 'https://i.pravatar.cc/150?u=student',
-    title: 'Computer Science Student',
-    bio: 'Final year computer science student with a passion for web development and AI. Looking for entry-level opportunities to apply my skills and grow as a developer.',
-    phone: '+1 (555) 123-4567',
-    location: 'San Francisco, CA',
-    website: 'https://student-portfolio.com',
-    skills: ['JavaScript', 'React', 'Node.js', 'Python', 'Machine Learning']
-  },
-  {
-    id: '2',
-    email: 'employer@jobhive.com',
-    name: 'Employer User',
-    password: 'password123',
-    role: 'employer' as UserRole,
-    profilePicture: 'https://i.pravatar.cc/150?u=employer',
-    title: 'HR Manager at TechCorp',
-    bio: 'Representing TechCorp, a leading software development company. We\'re always looking for fresh talent to join our innovative team.',
-    phone: '+1 (555) 987-6543',
-    location: 'New York, NY',
-    website: 'https://techcorp.com',
-    skills: ['Recruitment', 'Talent Acquisition', 'HR Management']
-  },
-  {
-    id: '3',
-    email: 'admin@jobhive.com',
-    name: 'Admin User',
-    password: 'password123',
-    role: 'admin' as UserRole,
-    profilePicture: 'https://i.pravatar.cc/150?u=admin',
-    title: 'Platform Administrator',
-    bio: 'Managing JobHive platform operations and ensuring a smooth experience for all users.',
-    phone: '+1 (555) 456-7890',
-    location: 'Remote',
-    website: 'https://jobhive.com',
-    skills: ['Platform Administration', 'Customer Support', 'User Experience']
-  }
-];
+
 
 /**
  * UserProvider Component
@@ -118,114 +98,306 @@ const MOCK_USERS = [
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [, navigate] = useLocation();
 
   // Check for existing user session in localStorage on component mount
-  useEffect(() => {
-    const storedUser = localStorage.getItem('jobhive_user');
-    if (storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error('Failed to parse stored user:', error);
-        localStorage.removeItem('jobhive_user');
-      }
+ useEffect(() => {
+  const storedUser = localStorage.getItem("jobhive_user");
+  const token = localStorage.getItem("access_token");
+
+  if (storedUser && token) {
+    try {
+      setUser(JSON.parse(storedUser));
+      setIsAuthenticated(true);
+    } catch (err) {
+      console.error("Error restoring session", err);
+      logout();
     }
-  }, []);
+  }
+}, []);
+
+
+// const sendVerificationCode = async (
+//   name: string,
+//   email: string,
+//   password: string,
+//   role: string
+//   ): Promise<boolean> => {
+//   try {
+//     const mappedRole = role === "student" ? "job_seeker" : role;
+//     const payload = { name, email, password, role: mappedRole };
+
+
+//     const res = await fetch("http://localhost:5000/api/send-verification-code", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify(payload),
+//     });
+
+//     const data = await res.json();
+
+//     if (res.ok) {
+//       localStorage.setItem("pendingVerificationEmail", email);
+//       localStorage.setItem("registrationFullName", name);
+//       localStorage.setItem("registrationPassword", password);
+//       localStorage.setItem("registrationAccountType", role);
+//       return true;
+//     } else {
+//       console.error("Send code failed:", data.message || data);
+//       return false;
+//     }
+//   } catch (err) {
+//     console.error("Send code error:", err);
+//     return false;
+//   }
+// };
+
+const sendVerificationCode = async (
+  name: string,
+  email: string,
+  password: string,
+  role: string
+): Promise<boolean> => {
+  try {
+    // ✅ Map "student" to "job_seeker" for backend compatibility
+    const mappedRole = role === "student" ? "job_seeker" : role;
+
+    const payload = {
+      name,
+      email,
+      password,
+      role: mappedRole,
+    };
+
+    const res = await fetch("http://localhost:5000/api/send-verification-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      // ✅ Store original frontend role
+      localStorage.setItem("pendingVerificationEmail", email);
+      localStorage.setItem("registrationFullName", name);
+      localStorage.setItem("registrationPassword", password);
+      localStorage.setItem("registrationAccountType", role);
+      return true;
+    } else {
+      console.error("Send code failed:", data.message || data);
+      return false;
+    }
+  } catch (err) {
+    console.error("Send code error:", err);
+    return false;
+  }
+};
+
+
+console.log("Sending verification code...");
+
+
 
   /**
    * Login function - authenticates a user with email and password
-   * In a real application, this would make an API call
-   * Here we're using mock data for testing
    */
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 800));
 
-    // Find user with matching email and password
-    const matchedUser = MOCK_USERS.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    );
+// const login = async (email: string, password: string): Promise<boolean> => {
+//   try {
+//     const response = await fetch("http://localhost:5000/api/login", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({ email, password }),
+//     });
 
-    if (matchedUser) {
-      // Create user object without password
-      const { password, ...safeUser } = matchedUser;
-      
-      // Update state and localStorage
-      setUser(safeUser);
+//     const data = await response.json();
+
+//     if (response.ok && data.access_token) {
+//       localStorage.setItem("access_token", data.access_token);
+//       localStorage.setItem("jobhive_user", JSON.stringify(data.user));
+//       setUser(data.user);
+//       setIsAuthenticated(true);
+//       return true;
+//     } else {
+//       console.error("Login failed:", data.message || data);
+//       return false;
+//     }
+//   } catch (error) {
+//     console.error("Login error:", error);
+//     return false;
+//   }
+// };
+
+const login = async (email: string, password: string): Promise<boolean> => {
+  try {
+    const response = await fetch("http://localhost:5000/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await response.json();
+
+    // ✅ Handle unverified users (403)
+    if (response.status === 403) {
+      console.warn("User not verified:", data.message);
+
+      // Save for verification screen
+      localStorage.setItem("pendingVerificationEmail", email);
+      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+      return false;
+    }
+
+    // ✅ Handle invalid credentials (401)
+    if (response.status === 401) {
+      alert(data.message || "Invalid email or password");
+      return false;
+    }
+
+    // ✅ Login success
+    if (response.ok && data.access_token) {
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("jobhive_user", JSON.stringify(data.user));
+      setUser(data.user);
       setIsAuthenticated(true);
-      localStorage.setItem('jobhive_user', JSON.stringify(safeUser));
-      
       return true;
     }
-    
+
+    // 🚫 Other unexpected failure
+    console.error("Login failed:", data.message || data);
     return false;
-  };
+
+  } catch (error) {
+    console.error("Login error:", error);
+    return false;
+  }
+};
+
+
+
+
 
   /**
    * Logout function - removes user session
    */
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('jobhive_user');
-  };
+ const logout = () => {
+  setUser(null);
+  setIsAuthenticated(false);
+  localStorage.removeItem("jobhive_user");
+  localStorage.removeItem("access_token");
+};
+
 
   /**
    * Register function - creates a new user account
-   * In a real application, this would make an API call
-   * Here we're just simulating the process
    */
-  const register = async (userData: Partial<User>, password: string): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Check if email is already used
-    if (MOCK_USERS.some(u => u.email.toLowerCase() === userData.email?.toLowerCase())) {
-      return false;
-    }
+const register = async (
+  userData: Partial<User>,
+  verificationCode: string
+): Promise<boolean> => {
+  const email = userData.email;
+  if (!email) return false;
 
-    // In a real application, this would create a user in the database
-    console.log('User registered:', { ...userData, password: '******' });
-    
-    // Auto-login after registration
-    if (userData.email) {
-      return login(userData.email, password);
-    }
-    
-    return false;
-  };
+  try {
+    const payload = {
+      email,
+      code: verificationCode,
+    };
 
-  /**
-   * Update Profile function - updates user profile data
-   * In a real application, this would make an API call
-   * Here we're just updating the local state
-   */
-  const updateProfile = async (profileData: Partial<User>): Promise<boolean> => {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    if (!user) {
-      return false;
-    }
-    
-    // In a real app, this would send profile data to the server
-    // and then update the local state with the returned user
-    try {
-      // Create updated user object
-      const updatedUser = { ...user, ...profileData };
-      
-      // Update state
-      setUser(updatedUser);
-      localStorage.setItem('jobhive_user', JSON.stringify(updatedUser));
-      
+    const res = await fetch("http://localhost:5000/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.access_token) {
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("jobhive_user", JSON.stringify(data.user));
+      setUser(data.user);
+      setIsAuthenticated(true);
       return true;
-    } catch (error) {
-      console.error('Profile update error:', error);
+    } else {
+      console.error("Registration verification failed:", data.message || data);
       return false;
     }
-  };
+  } catch (err) {
+    console.error("Registration error:", err);
+    return false;
+  }
+};
+
+
+
+
+const updateProfile = async (updatedData: Partial<User>): Promise<boolean> => {
+  const token = localStorage.getItem("access_token");
+  if (!token) return false;
+
+  try {
+    const payload = {
+      full_name: updatedData.name,
+      title: updatedData.title,
+      bio: updatedData.bio || "",
+      email: updatedData.email,
+      phone: updatedData.phone,
+      country_code: "+962",
+      address: updatedData.location,
+      website: updatedData.website || "",
+      skills: updatedData.skills || [],
+      education: updatedData.education || [],
+      profile_pic_url: updatedData.profilePicture || null,
+    };
+
+    const res = await fetch("http://localhost:5000/api/job-seeker/profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      setUser((prevUser) => {
+        if (!prevUser) return prevUser;
+
+        return {
+          ...prevUser,
+          name: payload.full_name ?? prevUser.name,
+          title: payload.title ?? prevUser.title,
+          bio: payload.bio ?? prevUser.bio,
+          phone: payload.phone ?? prevUser.phone,
+          email: payload.email ?? prevUser.email,
+          location: payload.address ?? prevUser.location,
+          website: payload.website ?? prevUser.website,
+          skills: payload.skills ?? prevUser.skills,
+          education: payload.education ?? prevUser.education,
+          profilePicture: data.profile_pic_url || updatedData.profilePicture || prevUser.profilePicture,
+        };
+      });
+
+      return true;
+    } else {
+      console.error("Update profile failed:", data.error || data.message);
+      return false;
+    }
+  } catch (err) {
+    console.error("Update profile error:", err);
+    return false;
+  }
+};
+
+
+
+
+
+
 
   /**
    * Helper function to check if user has a specific role
@@ -242,7 +414,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     logout,
     register,
     updateProfile,
-    isRole
+    isRole,
+    setUser,
+    setIsAuthenticated,
+    sendVerificationCode,
   };
 
   return (

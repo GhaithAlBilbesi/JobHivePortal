@@ -5,31 +5,193 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 import { useUser } from "@/contexts/UserContext";
-//import LoginModal from "@/components/auth/LoginModal"; // No longer needed
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { Progress } from "@/components/ui/progress";
+import { getAppliedJobs } from "@/utils/jobUtils";
+import { calculateResumeCompletion } from "@/utils/calculateResumeCompletion";
+import { getResumeData } from "@/utils/resumeUtils"; // or wherever it lives
+import { Link } from "wouter";
 
-/**
- * Dashboard Page
- * 
- * Displays a role-specific dashboard for users
- * Features different content based on user role (student, employer, admin)
- * Only accessible to authenticated users
- */
+
+
+interface Job {
+  id: number;
+  title: string;
+  job_type: string;
+  location: string;
+  is_remote: boolean;
+  description: string;
+  requirements: string;
+  salary?: string;
+  deadline?: string;
+  applicant_count?: number;
+  status?: 'active' | 'expired';
+}
+
 const Dashboard = () => {
   const { ref: pageRef } = useScrollAnimation();
   const { isAuthenticated, user, isRole } = useUser();
-  // No longer need login modal state
   const { toast } = useToast();
   const [, navigate] = useLocation();
+  const [myJobs, setMyJobs] = useState<Job[]>([]);
+  const [appliedJobs, setAppliedJobs] = useState<Job[]>([]);
+  const [savedJobs, setSavedJobs] = useState<any[]>([]);
+  const [resumeCompletion, setResumeCompletion] = useState<number>(0);
+  const [stats, setStats] = useState<{
+  total_users: number;
+  active_jobs: number;
+  total_applications: number;
+  success_rate: number;
+} | null>(null);
+
+
+
+// useEffect(() => {
+//   fetch("http://localhost:5000/api/admin/stats")
+//     .then((res) => res.json())
+//     .then(setStats)
+//     .catch((err) => console.error("Failed to load stats:", err));
+// }, []);
+
+
+  const handleEdit = (jobId: number) => {
+  navigate(`/employer/edit-job/${jobId}`);
+};
+
+const handleViewApplicants = (jobId: number) => {
+  navigate(`/employer/job/${jobId}/applicants`);
+};
+
+useEffect(() => {
+  const fetchResume = async () => {
+    try {
+      const resume = await getResumeData();
+      const percent = calculateResumeCompletion(resume);
+      setResumeCompletion(percent);
+    } catch (error) {
+      console.error("Failed to load resume", error);
+    }
+  };
+
+  if (isAuthenticated && isRole("job_seeker")) {
+    fetchResume();
+  }
+}, [isAuthenticated]);
   
-  // Set page title
+
+useEffect(() => {
+  const fetchSavedJobs = async () => {
+    if (!user?.id || !isRole("job_seeker")) return;
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/job-seeker/${user.id}/saved-jobs`);
+      if (!res.ok) throw new Error("Failed to fetch saved jobs");
+      const data = await res.json();
+      setSavedJobs(data);
+    } catch (err) {
+      console.error("Error loading saved jobs:", err);
+    }
+  };
+
+  fetchSavedJobs();
+}, [user]);
+
+
+useEffect(() => {
+  const fetchApplied = async () => {
+    if (user?.id && isRole("job_seeker")) {
+      try {
+        const jobs = await getAppliedJobs(Number(user.id));
+        setAppliedJobs(jobs);
+      } catch (err) {
+        console.error("Failed to load applied jobs", err);
+      }
+    }
+  };
+
+  fetchApplied();
+}, [user]);
+
+
+ const fetchMyJobs = async () => {
+  if (user?.id) {
+    try {
+      const res = await fetch(`http://localhost:5000/api/employer/${user.id}/jobs`);
+      const data = await res.json();
+      setMyJobs(data.jobs);
+    } catch (error) {
+      console.error("Failed to fetch employer jobs:", error);
+    }
+  }
+};
+
+useEffect(() => {
+  fetchMyJobs();
+}, [user?.id]);
+
+
+const toggleStatus = async (job: Job) => {
+  const action = job.status === "expired" ? "activate" : "expire";
+  const confirmed = window.confirm(`Are you sure you want to mark this job as ${action}?`);
+  if (!confirmed) return;
+
+  const newStatus = job.status === "expired" ? "active" : "expired";
+
+  try {
+    await fetch(`http://localhost:5000/api/jobs/${job.id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus }),
+    });
+
+    toast({
+      title: `Success`,
+      description: `Job marked as ${newStatus}.`,
+    });
+
+    fetchMyJobs();
+  } catch (error) {
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Failed to update job status.",
+    });
+  }
+};
+
+
+const deleteJob = async (jobId: number) => {
+  const confirmed = window.confirm("Are you sure you want to delete this job?");
+  if (!confirmed) return;
+
+  try {
+    await fetch(`http://localhost:5000/api/jobs/${jobId}`, {
+      method: 'DELETE',
+    });
+
+    toast({
+      title: "Job Deleted",
+      description: "The job post has been deleted successfully.",
+    });
+
+    fetchMyJobs();
+  } catch (error) {
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Failed to delete the job.",
+    });
+  }
+};
+
+
+
+
   useEffect(() => {
     document.title = "Dashboard - JobHive";
   }, []);
 
-  // If not authenticated, show login prompt
   if (!isAuthenticated) {
     return (
       <main className="py-20 px-4" ref={pageRef}>
@@ -47,170 +209,16 @@ const Dashboard = () => {
               Sign In to Access Dashboard
             </Button>
           </div>
-          {/* LoginModal removed - now using dedicated login page */}
         </div>
       </main>
     );
   }
 
-  // Student Dashboard
-  if (isRole('student')) {
-    return (
-      <main className="py-20 px-4" ref={pageRef}>
-        <div className="container fade-in-up">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">Student Dashboard</h1>
-              <p className="text-gray-600">Welcome back, {user?.name}!</p>
-            </div>
-            <div className="mt-4 md:mt-0">
-              <Button
-                onClick={() => navigate("/resume-builder")}
-                style={{ backgroundColor: "#F6C500", color: "#000000" }}
-              >
-                Update Resume
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Applications</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold mb-2">3</div>
-                <p className="text-sm text-gray-500">Jobs you've applied for</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Saved Jobs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold mb-2">8</div>
-                <p className="text-sm text-gray-500">Jobs you've bookmarked</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Resume Completeness</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold mb-2">65%</div>
-                <Progress value={65} className="h-2 mb-2" />
-                <p className="text-sm text-gray-500">Complete your profile to improve visibility</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Tabs defaultValue="applications">
-            <TabsList className="w-full border-b mb-8">
-              <TabsTrigger value="applications" className="flex-1">My Applications</TabsTrigger>
-              <TabsTrigger value="saved" className="flex-1">Saved Jobs</TabsTrigger>
-              <TabsTrigger value="recommended" className="flex-1">Recommended Jobs</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="applications">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="p-4 border rounded-md">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-bold text-lg">Frontend Developer</h3>
-                          <p className="text-gray-600">WebHive Tech • Istanbul, Turkey</p>
-                        </div>
-                        <Badge>Applied</Badge>
-                      </div>
-                      <p className="text-sm text-gray-500">Applied on May 4, 2025 • Status: Under Review</p>
-                    </div>
-                    <div className="p-4 border rounded-md">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-bold text-lg">UI/UX Design Intern</h3>
-                          <p className="text-gray-600">TechBee Company • Amman, Jordan</p>
-                        </div>
-                        <Badge variant="outline">Interview Scheduled</Badge>
-                      </div>
-                      <p className="text-sm text-gray-500">Applied on May 1, 2025 • Interview: May 12, 2025</p>
-                    </div>
-                    <div className="p-4 border rounded-md">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-bold text-lg">Content Creator</h3>
-                          <p className="text-gray-600">ContentHive Media • Remote</p>
-                        </div>
-                        <Badge variant="secondary">Rejected</Badge>
-                      </div>
-                      <p className="text-sm text-gray-500">Applied on April 25, 2025 • Status: Not Selected</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="saved">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="p-4 border rounded-md">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-bold text-lg">Data Analyst</h3>
-                          <p className="text-gray-600">DataBee Analytics • Riyadh, Saudi Arabia</p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            <Badge variant="outline" className="bg-gray-100 text-gray-600 hover:bg-gray-100 text-xs">SQL</Badge>
-                            <Badge variant="outline" className="bg-gray-100 text-gray-600 hover:bg-gray-100 text-xs">Python</Badge>
-                            <Badge variant="outline" className="bg-gray-100 text-gray-600 hover:bg-gray-100 text-xs">Data Visualization</Badge>
-                          </div>
-                        </div>
-                        <Button variant="ghost" size="sm">Apply</Button>
-                      </div>
-                    </div>
-                    {/* Additional saved jobs would be listed here */}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="recommended">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="p-4 border rounded-md">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-bold text-lg">Junior Web Developer</h3>
-                          <p className="text-gray-600">HiveWorks Solutions • Cairo, Egypt</p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            <Badge variant="outline" className="bg-gray-100 text-gray-600 hover:bg-gray-100 text-xs">React</Badge>
-                            <Badge variant="outline" className="bg-gray-100 text-gray-600 hover:bg-gray-100 text-xs">JavaScript</Badge>
-                            <Badge variant="outline" className="bg-gray-100 text-gray-600 hover:bg-gray-100 text-xs">HTML/CSS</Badge>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">Save</Button>
-                          <Button variant="default" size="sm" style={{ backgroundColor: "#F6C500", color: "#000000" }}>Apply</Button>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Additional recommended jobs would be listed here */}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
-    );
-  }
-
-  // Employer Dashboard
   if (isRole('employer')) {
     return (
-      <main className="py-20 px-4" ref={pageRef}>
-        <div className="container fade-in-up">
+      <main className="py-20 px-4 flex justify-center" ref={pageRef}>
+        <div className="w-full max-w-5xl fade-in-up">
+
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold mb-2">Employer Dashboard</h1>
@@ -226,13 +234,13 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-xl">Posted Jobs</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-2">5</div>
+                <div className="text-3xl font-bold mb-2">{myJobs.length}</div>
                 <p className="text-sm text-gray-500">Active job listings</p>
               </CardContent>
             </Card>
@@ -241,11 +249,14 @@ const Dashboard = () => {
                 <CardTitle className="text-xl">Total Applicants</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-2">42</div>
+                <div className="text-3xl font-bold mb-2">
+                  {myJobs.reduce((sum, job) => sum + (job.applicant_count || 0), 0)}
+                </div>
+
                 <p className="text-sm text-gray-500">Across all job postings</p>
               </CardContent>
             </Card>
-            <Card>
+            {/* <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-xl">Profile Views</CardTitle>
               </CardHeader>
@@ -253,71 +264,98 @@ const Dashboard = () => {
                 <div className="text-3xl font-bold mb-2">138</div>
                 <p className="text-sm text-gray-500">In the last 30 days</p>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
 
           <Tabs defaultValue="jobs">
             <TabsList className="w-full border-b mb-8">
               <TabsTrigger value="jobs" className="flex-1">My Job Postings</TabsTrigger>
-              <TabsTrigger value="applicants" className="flex-1">Recent Applicants</TabsTrigger>
-              <TabsTrigger value="analytics" className="flex-1">Analytics</TabsTrigger>
+              {/* <TabsTrigger value="applicants" className="flex-1">Recent Applicants</TabsTrigger> */}
             </TabsList>
-            
             <TabsContent value="jobs">
               <Card>
                 <CardContent className="p-6">
                   <div className="space-y-4">
-                    <div className="p-4 border rounded-md">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-bold text-lg">Frontend Developer</h3>
-                          <p className="text-gray-600">Full-time • Istanbul, Turkey</p>
-                        </div>
-                        <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>
-                      </div>
-                      <div className="flex justify-between mt-4">
-                        <p className="text-sm text-gray-500">Posted on May 2, 2025 • 12 applicants</p>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">Edit</Button>
-                          <Button variant="ghost" size="sm">View Applicants</Button>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Additional job postings would be listed here */}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="applicants">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="p-4 border rounded-md">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-bold text-lg">Sarah Johnson</h3>
-                          <p className="text-gray-600">Applied for: Frontend Developer</p>
-                          <p className="text-sm text-gray-500 mt-1">Computer Science Graduate • 3 years experience</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">View Resume</Button>
-                          <Button variant="default" size="sm" style={{ backgroundColor: "#F6C500", color: "#000000" }}>Message</Button>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Additional applicants would be listed here */}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="analytics">
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold mb-6">Job Posting Performance</h3>
-                  <div className="h-64 bg-gray-100 rounded-md flex items-center justify-center">
-                    <p className="text-gray-500">Analytics visualization will be displayed here</p>
+                    {myJobs.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-16 text-center text-gray-600">
+                            <i className="fas fa-briefcase text-5xl text-gray-300 mb-4"></i>
+                            <h2 className="text-2xl font-semibold mb-2">You haven’t posted any jobs yet</h2>
+                            <p className="mb-6">Start by posting a job to attract applicants.</p>
+                            <Button
+                              onClick={() => navigate("/post-job")}
+                              style={{ backgroundColor: "#F6C500", color: "#000000" }}
+                              className="px-6 py-2 rounded-full"
+                            >
+                              Post a Job
+                            </Button>
+                          </div>
+                        ) : (
+                          myJobs.map((job) => (
+                            <Link key={job.id} href={`/jobs/${job.id}`}>
+                              <div className="p-4 border rounded-md hover:bg-gray-50 cursor-pointer transition">
+                                <div className="flex justify-between items-start mb-2">
+                                  <div>
+                                    <h3 className="font-bold text-lg">{job.title}</h3>
+                                    <p className="text-gray-600">
+                                      {job.job_type} • {job.location}
+                                    </p>
+                                  </div>
+                                  <Badge
+                                    className={`text-xs px-2 py-1 rounded-full ${
+                                      job.status === "expired"
+                                        ? "bg-red-100 text-red-600"
+                                        : "bg-green-100 text-green-600"
+                                    }`}
+                                  >
+                                    {job.status === "expired" ? "Expired" : "Active"}
+                                  </Badge>
+
+                                </div>
+                                <div className="flex justify-between mt-4">
+                                  <p className="text-sm text-gray-500">Deadline: {job.deadline}</p>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        handleEdit(job.id);
+                                      }}
+                                    >
+                                      Edit
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        handleViewApplicants(job.id);
+                                      }}
+                                    >
+                                      View Applicants
+                                    </Button>
+                                      {/* Toggle Status */}
+                                    <Button variant="secondary" size="sm" onClick={(e) => {
+                                      e.preventDefault();
+                                      toggleStatus(job);
+                                    }}>
+                                      {job.status === 'expired' ? 'Activate' : 'Mark as Expired'}
+                                    </Button>
+
+                                    {/* Delete */}
+                                    <Button variant="destructive" size="sm" onClick={(e) => {
+                                      e.preventDefault();
+                                      deleteJob(job.id);
+                                    }}>
+                                      Delete
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            </Link>
+                          ))
+                        )}
+
                   </div>
                 </CardContent>
               </Card>
@@ -328,140 +366,143 @@ const Dashboard = () => {
     );
   }
 
-  // Admin Dashboard
-  if (isRole('admin')) {
-    return (
-      <main className="py-20 px-4" ref={pageRef}>
-        <div className="container fade-in-up">
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">Admin Dashboard</h1>
-            <p className="text-gray-600">Platform management and analytics</p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Total Users</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold mb-2">1,254</div>
-                <p className="text-sm text-gray-500">+24 this week</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Active Jobs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold mb-2">87</div>
-                <p className="text-sm text-gray-500">Across all employers</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Applications</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold mb-2">563</div>
-                <p className="text-sm text-gray-500">This month</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xl">Success Rate</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold mb-2">42%</div>
-                <p className="text-sm text-gray-500">Placement rate</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Tabs defaultValue="users">
-            <TabsList className="w-full border-b mb-8">
-              <TabsTrigger value="users" className="flex-1">User Management</TabsTrigger>
-              <TabsTrigger value="jobs" className="flex-1">Job Listings</TabsTrigger>
-              <TabsTrigger value="reports" className="flex-1">Reports</TabsTrigger>
-              <TabsTrigger value="settings" className="flex-1">System Settings</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="users">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold">User Accounts</h3>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">Export Data</Button>
-                      <Button variant="default" size="sm" style={{ backgroundColor: "#F6C500", color: "#000000" }}>Add User</Button>
-                    </div>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="p-4 border rounded-md">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-bold text-lg">Ahmad Al-Najjar</h3>
-                          <p className="text-gray-600">Student • Registered on April 10, 2025</p>
-                        </div>
-                        <Badge>Student</Badge>
-                      </div>
-                    </div>
-                    {/* Additional users would be listed here */}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="jobs">
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold mb-6">Platform Job Listings</h3>
-                  <p className="text-gray-500">Job management interface will be displayed here</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="reports">
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold mb-6">System Reports</h3>
-                  <p className="text-gray-500">Reports and analytics will be displayed here</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="settings">
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold mb-6">System Configuration</h3>
-                  <p className="text-gray-500">Settings management interface will be displayed here</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
-    );
-  }
-
-  // Fallback for unknown role
+  if (isRole("job_seeker")) {
   return (
     <main className="py-20 px-4" ref={pageRef}>
       <div className="container fade-in-up">
-        <div className="text-center">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">Dashboard</h1>
-          <p className="text-lg max-w-2xl mx-auto mb-8">
-            Welcome to your dashboard. We're preparing your experience.
-          </p>
-          <Button 
-            onClick={() => navigate("/")}
-            variant="outline"
-          >
-            Return to Homepage
-          </Button>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">
+              Welcome back, {user?.name} 👋
+            </h1>
+            <p className="text-gray-600">
+              Explore new jobs and keep your resume up to date
+            </p>
+          </div>
+          <div className="mt-4 md:mt-0 flex flex-wrap gap-3">
+            <Button
+              onClick={() => navigate("/resume-builder")}
+              className="bg-[#F6C500] text-black"
+            >
+              Update Resume
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/jobs")}>
+              Browse Jobs
+            </Button>
+          </div>
         </div>
+
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl">My Applications</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold mb-2">{appliedJobs.length}</div>
+              <p className="text-sm text-gray-500">Jobs you've applied to</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl">Saved Jobs</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold mb-2">{savedJobs.length}</div>
+              <p className="text-sm text-gray-500">Jobs you've bookmarked</p>
+            </CardContent>
+          </Card>
+          <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl">Resume Completion</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold mb-2">{resumeCompletion}%</div>
+            <Progress value={resumeCompletion} className="h-2 mb-2" />
+            <p className="text-sm text-gray-500">
+              Complete your resume to improve visibility
+            </p>
+          </CardContent>
+        </Card>
+
+        </div>
+
+        
+        <Tabs defaultValue="applications">
+  <TabsList className="w-full border-b mb-8">
+    <TabsTrigger value="applications" className="flex-1">
+      📄 My Applications
+    </TabsTrigger>
+    <TabsTrigger value="saved" className="flex-1">
+      🔖 Saved Jobs
+    </TabsTrigger>
+    <TabsTrigger value="recommended" className="flex-1">
+      ✨ Recommended
+    </TabsTrigger>
+  </TabsList>
+
+  <TabsContent value="applications">
+    {appliedJobs.length === 0 ? (
+      <p className="text-gray-500">No applications yet.</p>
+    ) : (
+      <div className="space-y-4">
+        {appliedJobs.map((job, index) => (
+          <div key={`${job.id}-${index}`} className="p-4 border rounded-md">
+            <h3 className="text-lg font-bold">{job.title}</h3>
+            <p className="text-sm text-gray-600">
+              {job.location} • {job.job_type}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              Deadline: {job.deadline}
+            </p>
+          </div>
+        ))}
+      </div>
+    )}
+  </TabsContent>
+
+  <TabsContent value="saved">
+    {savedJobs.length === 0 ? (
+      <Card>
+        <CardContent className="p-6">
+          <p className="text-gray-500">You haven't saved any jobs yet.</p>
+        </CardContent>
+      </Card>
+    ) : (
+      <div className="space-y-4">
+        {savedJobs.map((job, index) => (
+          <div key={`${job.id}-${index}`} className="p-4 border rounded-md">
+            <h3 className="text-lg font-bold">{job.title}</h3>
+            <p className="text-sm text-gray-600">
+              {job.location} • {job.job_type}
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              Deadline: {job.deadline}
+            </p>
+          </div>
+        ))}
+      </div>
+    )}
+  </TabsContent>
+
+  <TabsContent value="recommended">
+    <Card>
+      <CardContent className="p-6">
+        <p className="text-gray-500">Recommended jobs will appear here.</p>
+      </CardContent>
+    </Card>
+  </TabsContent>
+</Tabs>
+
       </div>
     </main>
   );
+}
+
+
+
+  return null;
 };
 
 export default Dashboard;

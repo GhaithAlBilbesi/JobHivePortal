@@ -1,20 +1,28 @@
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { ResumeData } from '@/components/resume-templates';
+import axios from "axios";
+
+
+
 
 // Generate a PDF from a HTML element
-export const generatePDF = async (elementId: string, fileName: string = 'resume.pdf'): Promise<void> => {
+export const generatePDF = async (
+  elementId: string,
+  fileName: string = 'resume.pdf',
+  returnBlob: boolean = false
+): Promise<Blob | void> => {
   try {
     const element = document.getElementById(elementId);
     if (!element) {
       throw new Error(`Element with ID ${elementId} not found.`);
     }
 
-    // Create a clone of the element to avoid modifying the original
+    // Clone setup
     const clone = element.cloneNode(true) as HTMLElement;
     clone.id = 'temp-pdf-element';
-    clone.style.width = '210mm';  // A4 width
-    clone.style.minHeight = '297mm'; // A4 height
+    clone.style.width = '210mm';
+    clone.style.minHeight = '297mm';
     clone.style.position = 'absolute';
     clone.style.left = '-9999px';
     clone.style.top = '0';
@@ -26,106 +34,68 @@ export const generatePDF = async (elementId: string, fileName: string = 'resume.
     clone.style.overflow = 'hidden';
     clone.style.transition = 'none';
     clone.style.animation = 'none';
-    
-    // Ensure all backgrounds are printed
-    const allColorElements = clone.querySelectorAll('[class*="bg-"]');
-    allColorElements.forEach(el => {
-      const htmlEl = el as HTMLElement;
-      // Use standard and prefixed property (with a fallback method for type safety)
-      htmlEl.style.setProperty('-webkit-print-color-adjust', 'exact');
-      htmlEl.style.setProperty('print-color-adjust', 'exact');
-      htmlEl.style.setProperty('color-adjust', 'exact');
-    });
-    
-    // Add to body temporarily
+
     document.body.appendChild(clone);
-    
-    // Ensure page breaks are handled properly
-    const sections = clone.querySelectorAll('section, .section, h1, h2, h3');
-    sections.forEach(section => {
-      (section as HTMLElement).style.pageBreakInside = 'avoid';
-      (section as HTMLElement).style.breakInside = 'avoid';
-    });
-    
-    // Convert the HTML element to a canvas with proper options for quality
+
     const canvas = await html2canvas(clone, {
-      scale: 2, // Higher scale for better quality
-      useCORS: true, // Enable loading cross-origin images
-      logging: false,
+      scale: 2,
+      useCORS: true,
       backgroundColor: '#ffffff',
       allowTaint: true,
-      windowWidth: 794, // A4 width in pixels (aproximately at 96 DPI)
-      windowHeight: 1123, // A4 height in pixels
+      windowWidth: 794,
+      windowHeight: 1123,
       onclone: (clonedDoc) => {
-        // Additional adjustments to the cloned document if needed
         const clonedElement = clonedDoc.getElementById('temp-pdf-element');
         if (clonedElement) {
-          // Make sure flex layout is preserved
           clonedElement.style.display = 'flex';
           clonedElement.style.flexDirection = 'column';
         }
       }
     });
-    
-    // Remove the clone after rendering
+
     document.body.removeChild(clone);
-    
-    // Calculate the PDF dimensions (A4 paper)
-    const imgWidth = 210; // A4 width in mm
-    const pageHeight = 297; // A4 height in mm
+
+    const imgWidth = 210;
+    const pageHeight = 297;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
-    // Create PDF document with proper dimensions and compression
+
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
       format: 'a4',
       compress: true
     });
-    
-    // Add the canvas as an image to the PDF
-    pdf.addImage(
-      canvas.toDataURL('image/jpeg', 0.95), // Use JPEG for smaller file size, high quality
-      'JPEG', 
-      0,  // X position 
-      0,  // Y position
-      imgWidth, // Width
-      imgHeight // Height
-    );
-    
-    // Handle multi-page resumes if content exceeds A4 height
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+    pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+
     if (imgHeight > pageHeight) {
       let remainingHeight = imgHeight;
-      let position = -pageHeight; // Starting position for the second page
-      
+      let position = -pageHeight;
       while (remainingHeight > pageHeight) {
-        // Add new page
         pdf.addPage();
-        
-        // Add the same image but shifted upward to show the next page worth of content
-        pdf.addImage(
-          canvas.toDataURL('image/jpeg', 0.95),
-          'JPEG',
-          0,
-          position,
-          imgWidth,
-          imgHeight
-        );
-        
-        // Update remaining height and position for next page
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
         remainingHeight -= pageHeight;
         position -= pageHeight;
       }
     }
 
-    // Save the PDF
-    pdf.save(fileName);
-    return;
+    if (returnBlob) {
+      const blob = await pdf.output('blob');
+      return blob;
+    } else {
+      pdf.save(fileName);
+      return;
+    }
+
   } catch (error) {
     console.error('Error generating PDF:', error);
     throw error;
   }
 };
+
+
 
 // Initial empty resume data
 export const emptyResumeData: ResumeData = {
@@ -172,30 +142,75 @@ export const emptyResumeData: ResumeData = {
 export const RESUME_STORAGE_KEY = 'jobhive_resume_data';
 export const TEMPLATE_STORAGE_KEY = 'jobhive_resume_template';
 
-export const saveResumeData = (data: Partial<ResumeData>): void => {
+export const saveResumeData = async (data: Partial<ResumeData>): Promise<void> => {
   try {
-    // Get existing data from storage
-    const existingData = JSON.parse(localStorage.getItem(RESUME_STORAGE_KEY) || '{}');
-    // Merge existing data with new data
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      throw new Error("No access token found");
+    }
+
+    await axios.patch(
+      "http://localhost:5000/api/resume",
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    // Optionally update localStorage too for faster preview
+    const existingData = JSON.parse(localStorage.getItem("jobhive_resume_data") || "{}");
     const mergedData = { ...existingData, ...data };
-    localStorage.setItem(RESUME_STORAGE_KEY, JSON.stringify(mergedData));
+    localStorage.setItem("jobhive_resume_data", JSON.stringify(mergedData));
+
   } catch (error) {
-    console.error('Error saving resume data:', error);
+    console.error("Failed to save resume to backend:", error);
+    throw error;
   }
 };
 
-export const getResumeData = (): ResumeData => {
+export const getResumeData = async () => {
+  const token = localStorage.getItem("access_token");
+
   try {
-    const data = localStorage.getItem(RESUME_STORAGE_KEY);
-    if (!data) return emptyResumeData;
-    
-    const parsedData = JSON.parse(data);
-    return { ...emptyResumeData, ...parsedData };
-  } catch (error) {
-    console.error('Error getting resume data:', error);
-    return emptyResumeData;
+    const res = await fetch("http://localhost:5000/api/resume", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      credentials: "include",
+    });
+
+    console.log("Sending token:", token);
+
+    if (res.status === 404) {
+      console.warn("No resume found for user.");
+      return null;
+    }
+
+    if (!res.ok) {
+      const err = await res.json();
+      console.error("Resume fetch error:", err);
+      throw new Error("Failed to fetch resume");
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("Resume fetch exception:", err);
+    return null; // Fallback: still return null instead of crashing the apply flow
   }
 };
+
+
+
+
+
+
+
 
 export const saveTemplateChoice = (templateId: string): void => {
   localStorage.setItem(TEMPLATE_STORAGE_KEY, templateId);

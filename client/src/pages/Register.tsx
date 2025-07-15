@@ -5,7 +5,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Link, useLocation } from 'wouter';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUser } from '@/contexts/UserContext';
-import logo from '@/assets/logo.svg';
 
 /**
  * Register Page Component
@@ -25,7 +24,8 @@ const Register = () => {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [, navigate] = useLocation();
-  const { register, isAuthenticated } = useUser();
+  const { sendVerificationCode, isAuthenticated } = useUser();
+
   
   // Password validation rules
   const [passwordValidation, setPasswordValidation] = useState({
@@ -102,20 +102,24 @@ const Register = () => {
     // If form is valid and just registering (not proceeding to next step)
     // then try to register the user
     try {
-      const success = await register({
-        name: fullName,
-        email,
-        role: accountType as 'student' | 'employer'
-      }, password);
+      const success = await sendVerificationCode(
+      fullName,
+      email,
+      password,
+      accountType
+
+    );
 
       if (success) {
-        // Navigate to the appropriate profile setup based on account type
-        if (accountType === 'employer') {
-          navigate('/register/employer');
-        } else {
-          navigate('/register/student');
-        }
-      } else {
+        // Store email and account type for verification flow 
+        localStorage.setItem('pendingVerificationEmail', email);
+        localStorage.setItem('registrationAccountType', accountType);
+        localStorage.setItem('registrationFullName', fullName);
+
+        // Redirect to verification screen
+        navigate(`/verify-email?email=${email}`);
+    }
+ else {
         alert('Registration failed. This email might already be registered.');
       }
     } catch (error) {
@@ -125,18 +129,11 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left Section - Registration Form */}
-      <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col">
-        <div className="mb-8">
-          <Link href="/" className="flex items-center gap-2">
-            <img src={logo} alt="JobHive Logo" className="w-8 h-8" />
-            <span className="text-xl font-bold">JobHive</span>
-          </Link>
-        </div>
-
+      <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col mt-16">
         <div className="flex-grow flex flex-col justify-center max-w-md mx-auto w-full">
-          <h1 className="text-2xl font-bold mb-2">Create account.</h1>
+          <h1 className="text-2xl font-bold mb-4">Create account</h1>
           
           <p className="text-gray-600 text-sm mb-6">
             Already have an account?{' '}
@@ -161,22 +158,16 @@ const Register = () => {
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="mb-4">
               <Input
                 placeholder="Full Name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
-                className="h-12"
-              />
-              <Input
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                className="h-12"
+                className="h-12 w-full"
               />
             </div>
+
 
             <div>
               <Input
@@ -295,21 +286,6 @@ const Register = () => {
               Create Account <i className="fas fa-arrow-right ml-2"></i>
             </Button>
           </form>
-
-          <div className="my-6 flex items-center">
-            <div className="flex-grow border-t border-gray-200"></div>
-            <span className="mx-4 text-sm text-gray-400">or</span>
-            <div className="flex-grow border-t border-gray-200"></div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="h-12">
-              <i className="fab fa-facebook-f mr-2 text-blue-600"></i> Sign up with Facebook
-            </Button>
-            <Button variant="outline" className="h-12">
-              <i className="fab fa-google mr-2 text-red-500"></i> Sign up with Google
-            </Button>
-          </div>
         </div>
       </div>
 

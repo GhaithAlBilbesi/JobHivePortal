@@ -25,7 +25,7 @@ const Footer = () => {
     { label: "Home", path: "/" },
     { label: "Browse Jobs", path: "/jobs" },
     { label: "Resume Builder", path: "/resume-builder" },
-    { label: "Contact Us", path: "/contact" }
+    { label: "Meet Our Team", path: "/meet-the-team" }
   ];
   
   // Job Categories for the footer
@@ -55,9 +55,7 @@ const Footer = () => {
               onClick={() => handleNavigate("/")} 
               className="flex items-center mb-4 focus:outline-none"
             >
-              <div className="w-10 h-10 bg-[#F6C500] rounded-lg flex items-center justify-center mr-2">
-                <i className="fas fa-bug text-black text-xl"></i>
-              </div>
+              <img src="/src/assets/logo1.png" alt="JobHive Logo" className="w-12 h-12 object-contain mr-2" />
               <span className="text-2xl font-bold text-white">Job<span className="text-[#F6C500]">Hive</span></span>
             </button>
             <p className="text-gray-400 mb-4">
@@ -125,7 +123,7 @@ const Footer = () => {
               </li>
               <li className="flex items-start">
                 <i className="fas fa-phone-alt text-[#F6C500] mt-1 mr-3"></i>
-                <span className="text-gray-400">+962 6 123 4567</span>
+                <span className="text-gray-400">+962 782925882</span>
               </li>
             </ul>
           </div>

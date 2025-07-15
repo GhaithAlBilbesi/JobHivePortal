@@ -18,12 +18,70 @@ const StudentRegister = () => {
   const [fullName, setFullName] = useState('');
   const [title, setTitle] = useState('');
   const [phone, setPhone] = useState('');
-  const [countryCode, setCountryCode] = useState('+1');
+  const [countryCode, setCountryCode] = useState('+962');
   const [address, setAddress] = useState('');
   const [profilePicture, setProfilePicture] = useState<File | null>(null);
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [, navigate] = useLocation();
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const isValidJordanianPhone = (number: string) => /^7\d{8}$/.test(number);// expects 9 digits starting with 7
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  const [resumeParsedData, setResumeParsedData] = useState<any>(null);
+  const [cvValidated, setCvValidated] = useState(false);
+  const [cvPreview, setCvPreview] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [bio, setBio] = useState('');
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+
+
+
+
+ 
+const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files && e.target.files[0]) {
+    const file = e.target.files[0];
+    setResumeFile(file);
+    setCvPreview(file.name);
+    setCvValidated(false);
+    setUploadError(null);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const token = localStorage.getItem("access_token");
+
+    try {
+      const res = await fetch("http://localhost:5000/api/upload-resume", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`, // ✅ This was missing
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setUploadError(data.error || "Upload failed");
+        return;
+      }
+
+      setCvValidated(true);
+      if (data.cv_url) {
+      setResumeUrl(data.cv_url); // ✅ Match backend key
+  }
+
+    } catch (err) {
+      console.error("Resume upload error:", err);
+      setUploadError("Something went wrong. Please try again.");
+    }
+  }
+};
+
+
+
 
   // Education state
   const [education, setEducation] = useState([
@@ -35,13 +93,85 @@ const StudentRegister = () => {
   const [currentSkill, setCurrentSkill] = useState('');
 
   // Handle profile picture selection
-  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setProfilePicture(file);
-      setProfilePicturePreview(URL.createObjectURL(file));
+  const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files && e.target.files[0]) {
+    const file = e.target.files[0];
+    
+    const formData = new FormData();
+    formData.append("profile_picture", file);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/upload/profile-picture", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setProfilePicturePreview(`http://localhost:5000${data.url}`);
+      } else {
+        alert(data.error || "Failed to upload profile picture.");
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      alert("Upload failed.");
     }
-  };
+  }
+};
+;
+
+const renderResumeUpload = () => (
+  <>
+    <h1 className="text-2xl font-bold mb-6">Upload Your Resume</h1>
+
+    <p className="text-gray-600 mb-4">
+      You can upload your own resume file. We'll verify it's a valid CV and extract your details.
+    </p>
+
+    <div
+      className={`border-2 border-dashed rounded-md p-8 flex flex-col items-center justify-center h-44 cursor-pointer ${cvPreview ? 'border-[#F6C500]' : 'border-gray-300'}`}
+      onClick={() => document.getElementById('resume-upload')?.click()}
+    >
+      {cvPreview ? (
+        <>
+          <i className="fas fa-file-alt text-4xl text-[#F6C500] mb-2"></i>
+          <p className="text-gray-800">{cvPreview}</p>
+          <p className="text-sm text-green-600 mt-1">{cvValidated ? 'Resume validated ✅' : 'Pending validation...'}</p>
+        </>
+      ) : (
+        <>
+          <i className="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-2"></i>
+          <p className="text-sm text-gray-500">Click or drop your resume file here (PDF, DOCX)</p>
+        </>
+      )}
+      <input
+        type="file"
+        id="resume-upload"
+        accept=".pdf,.doc,.docx"
+        className="hidden"
+        onChange={handleResumeUpload}
+      />
+    </div>
+
+    {uploadError && (
+      <p className="text-sm text-red-600 mt-2">{uploadError}</p>
+    )}
+
+    <p className="text-sm text-gray-600 mt-4 text-center">
+  Don’t have a resume?{" "}
+  <Link to="/resume-builder" className="text-[#F6C500] underline font-medium">
+    Use our Resume Builder
+  </Link>
+</p>
+
+
+    <p className="text-sm text-gray-500 mt-4">
+      You cannot apply to jobs unless a resume is uploaded or built using the Resume Builder.
+    </p>
+  </>
+);
+
+
 
   // Add a new education entry
   const addEducation = () => {
@@ -82,17 +212,88 @@ const StudentRegister = () => {
     { icon: <i className="fas fa-user"></i>, label: "Personal Info" },
     { icon: <i className="fas fa-graduation-cap"></i>, label: "Education" },
     { icon: <i className="fas fa-tools"></i>, label: "Skills" },
+    { icon: <i className="fas fa-file-upload"></i>, label: "Resume" },
   ];
 
-  // Handle next step
-  const handleNext = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (currentStep < registrationSteps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      navigate('/dashboard');
+
+
+const handleNext = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (currentStep < registrationSteps.length - 1) {
+    setCurrentStep(currentStep + 1);
+    return;
+  }
+
+  try {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      console.error("Missing token");
+      return;
     }
-  };
+
+    // Upload profile picture if selected
+    let uploadedImageUrl = profilePicturePreview;
+
+    if (profilePicture && !profilePicturePreview) {
+      const formData = new FormData();
+      formData.append("profile_picture", profilePicture);
+
+      const uploadResponse = await fetch("http://localhost:5000/api/upload/profile-picture", {
+        method: "POST",
+        body: formData,
+      });
+
+      const uploadData = await uploadResponse.json();
+      if (!uploadResponse.ok) {
+        console.error("Image upload failed:", uploadData);
+        return;
+      }
+
+      uploadedImageUrl = `http://localhost:5000${uploadData.url}`;
+    }
+
+    const mainEducation = education[0];
+    const major = mainEducation?.degree || '';
+    const university = mainEducation?.institution || '';
+
+    // Submit profile data even if resumeUrl is null
+    const response = await fetch("http://localhost:5000/api/job-seeker/profile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        full_name: fullName,
+        title,
+        phone: `${countryCode} ${phone}`,
+        address,
+        profile_pic_url: uploadedImageUrl,
+        skills,
+        education,
+        major,
+        university,
+        cv_url: resumeUrl || null,  // ← allow null CV
+        bio 
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Failed to save profile:", errorData);
+      return;
+    }
+
+    navigate("/resume-builder"); // 👈 Navigate to resume builder after saving
+
+  } catch (err) {
+    console.error("Error submitting registration:", err);
+  }
+};
+
+
+
 
   // Handle previous step
   const handlePrevious = () => {
@@ -103,17 +304,9 @@ const StudentRegister = () => {
     }
   };
 
-  // Country codes for dropdown
+  // Country codes for dropdownf
   const countryCodes = [
-    { code: '+1', flag: '🇺🇸', name: 'United States' },
-    { code: '+44', flag: '🇬🇧', name: 'United Kingdom' },
-    { code: '+91', flag: '🇮🇳', name: 'India' },
-    { code: '+61', flag: '🇦🇺', name: 'Australia' },
-    { code: '+49', flag: '🇩🇪', name: 'Germany' },
-    { code: '+33', flag: '🇫🇷', name: 'France' },
-    { code: '+86', flag: '🇨🇳', name: 'China' },
-    { code: '+81', flag: '🇯🇵', name: 'Japan' },
-    { code: '+880', flag: '🇧🇩', name: 'Bangladesh' },
+    { code: '+962', flag: 'JD', name: 'Jordan' },
   ];
 
   // Generate year options for education dropdowns
@@ -174,6 +367,8 @@ const StudentRegister = () => {
             required
             className="h-12"
           />
+          
+
         </div>
         <div>
           <label htmlFor="title" className="block font-medium mb-2">
@@ -184,43 +379,34 @@ const StudentRegister = () => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Software Engineer, Student"
+            required
             className="h-12"
           />
+          
         </div>
       </div>
 
       {/* Contact Info */}
       <div className="mb-6">
-        <label htmlFor="phone" className="block font-medium mb-2">
-          Phone
-        </label>
-        <div className="flex">
-          <div className="w-28 mr-2">
-            <Select value={countryCode} onValueChange={setCountryCode}>
-              <SelectTrigger className="h-12">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {countryCodes.map((country) => (
-                  <SelectItem key={country.code} value={country.code}>
-                    <div className="flex items-center">
-                      <span className="mr-2">{country.flag}</span>
-                      <span>{country.code}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Input
-            id="phone"
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="Phone number"
-            className="h-12 flex-grow"
-          />
-        </div>
+        <div>
+      <label htmlFor="phone" className="block font-medium mb-2">
+        Phone (Jordanian)
+      </label>
+      <div className="flex items-center">
+        <span className="px-3 py-2 border border-r-0 rounded-l-md bg-gray-100 text-gray-700 text-sm">+962</span>
+        <Input
+          id="phone"
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="7XXXXXXXX"
+          className="h-12 rounded-l-none"
+          required
+        />
+        
+      </div>
+</div>
+
       </div>
 
       {/* Address */}
@@ -228,14 +414,46 @@ const StudentRegister = () => {
         <label htmlFor="address" className="block font-medium mb-2">
           Address
         </label>
-        <Input
-          id="address"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          placeholder="Your address"
-          className="h-12"
-        />
+        <Select value={address} onValueChange={setAddress}>
+  <SelectTrigger className="h-12">
+    <SelectValue placeholder="Select city" />
+  </SelectTrigger>
+  <SelectContent>
+    {[
+      "Amman",
+      "Irbid",
+      "Zarqa",
+      "Aqaba",
+      "Madaba",
+      "Mafraq",
+      "Jerash",
+      "Ajloun",
+      "Karak",
+      "Tafilah",
+      "Ma'an",
+      "Balqa"
+    ].map(city => (
+      <SelectItem key={city} value={city}>{city}</SelectItem>
+    ))}
+  </SelectContent>
+</Select>
+
       </div>
+
+      {/* Bio */}
+<div className="mb-8">
+  <label htmlFor="bio" className="block font-medium mb-2">
+    Bio
+  </label>
+  <Textarea
+    id="bio"
+    value={bio}
+    onChange={(e) => setBio(e.target.value)}
+    placeholder="Tell us a little about yourself..."
+    rows={4}
+  />
+</div>
+
     </>
   );
 
@@ -264,16 +482,45 @@ const StudentRegister = () => {
                 onChange={(e) => updateEducation(index, 'degree', e.target.value)}
                 placeholder="e.g. Bachelor of Science in Computer Science"
                 className="h-12"
+                required
               />
             </div>
             <div>
               <label className="block font-medium mb-2">Institution</label>
-              <Input
-                value={edu.institution}
-                onChange={(e) => updateEducation(index, 'institution', e.target.value)}
-                placeholder="e.g. University of Technology"
-                className="h-12"
-              />
+              <Select
+            value={edu.institution}
+            onValueChange={(value) => updateEducation(index, 'institution', value)}
+          >
+            <SelectTrigger className="h-12">
+              <SelectValue placeholder="Select your university" />
+            </SelectTrigger>
+            <SelectContent>
+              {[
+                "University of Jordan",
+                "Jordan University of Science and Technology",
+                "Yarmouk University",
+                "Hashemite University",
+                "Al-Balqa Applied University",
+                "German Jordanian University",
+                "Mutah University",
+                "Philadelphia University",
+                "Zarqa University",
+                "Applied Science University",
+                "Al-Ahliyya Amman University",
+                "Princess Sumaya University for Technology",
+                "Al-Hussein Bin Talal University",
+                "Middle East University",
+                "Zaytouna University",
+                "University of Petra",
+                "Tafila Technical University"
+              ].map((uni) => (
+                <SelectItem key={uni} value={uni}>
+                  {uni}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
             </div>
           </div>
 
@@ -415,6 +662,8 @@ const StudentRegister = () => {
           {currentStep === 0 && renderPersonalInfo()}
           {currentStep === 1 && renderEducation()}
           {currentStep === 2 && renderSkills()}
+          {currentStep === 3 && renderResumeUpload()}
+
 
           {/* Footer */}
           <div className="flex justify-between">
@@ -430,6 +679,7 @@ const StudentRegister = () => {
               type="submit"
               className="w-40 h-12 font-medium"
               style={{ backgroundColor: "#F6C500", color: "#000000" }}
+              disabled={false}
             >
               {currentStep === registrationSteps.length - 1 ? 'Complete' : 'Continue'}{' '}
               <i className="fas fa-arrow-right ml-1"></i>

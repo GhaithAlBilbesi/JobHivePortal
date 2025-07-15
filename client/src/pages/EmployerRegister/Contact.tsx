@@ -15,22 +15,24 @@ import logo from '@/assets/logo.svg';
 const Contact = () => {
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
-  const [countryCode, setCountryCode] = useState('+1');
+  const [countryCode, setCountryCode] = useState('+962');
   const [email, setEmail] = useState('');
   const [, navigate] = useLocation();
 
   // Country codes for dropdown
   const countryCodes = [
-    { code: '+1', flag: '🇺🇸', name: 'United States' },
-    { code: '+44', flag: '🇬🇧', name: 'United Kingdom' },
-    { code: '+91', flag: '🇮🇳', name: 'India' },
-    { code: '+61', flag: '🇦🇺', name: 'Australia' },
-    { code: '+49', flag: '🇩🇪', name: 'Germany' },
-    { code: '+33', flag: '🇫🇷', name: 'France' },
-    { code: '+86', flag: '🇨🇳', name: 'China' },
-    { code: '+81', flag: '🇯🇵', name: 'Japan' },
-    { code: '+880', flag: '🇧🇩', name: 'Bangladesh' },
-  ];
+  { code: '+962', flag: '🇯🇴', name: 'Jordan' },
+  { code: '+1', flag: '🇺🇸', name: 'United States' },
+  { code: '+44', flag: '🇬🇧', name: 'United Kingdom' },
+  { code: '+91', flag: '🇮🇳', name: 'India' },
+  { code: '+61', flag: '🇦🇺', name: 'Australia' },
+  { code: '+49', flag: '🇩🇪', name: 'Germany' },
+  { code: '+33', flag: '🇫🇷', name: 'France' },
+  { code: '+86', flag: '🇨🇳', name: 'China' },
+  { code: '+81', flag: '🇯🇵', name: 'Japan' },
+  { code: '+880', flag: '🇧🇩', name: 'Bangladesh' },
+];
+
 
   // Progress bar steps
   const registrationSteps = [
@@ -40,10 +42,40 @@ const Contact = () => {
     { icon: <i className="fas fa-phone"></i>, label: "Contact" },
   ];
 
-  const handleFinish = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFinish = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const storedUser = localStorage.getItem("jobhive_user");
+  const userId = storedUser ? JSON.parse(storedUser).id : null;
+
+  if (!userId) {
+    alert("User ID not found. Are you logged in?");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:5000/api/employer/contact-info", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        address,
+        phone: `${countryCode}${phone}`,
+        email,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Failed to save contact info");
+
     navigate('/register/employer/complete');
-  };
+  } catch (err) {
+    console.error(err);
+    alert("Failed to save. Please try again.");
+  }
+};
+
 
   const handlePrevious = () => {
     navigate('/register/employer/social-media');

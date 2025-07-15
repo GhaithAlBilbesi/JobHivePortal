@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatText, formatStatus, formatDate } from "@/utils/formatters";
+
 
 /**
  * Admin Panel Page
@@ -22,7 +24,249 @@ const AdminPanel = () => {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [selectedReportReason, setSelectedReportReason] = useState<string | null>(null);
+  const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
+
+  const [stats, setStats] = useState({
+  totalUsers: 0,
+  activeJobs: 0,
+  applications: 0,
+  pendingReports: 0,
+});
+
+
+
+
+
+
+
+  const formatRole = (role: string | undefined) => {
+  return role ? role.charAt(0).toUpperCase() + role.slice(1) : "Unknown";
+};
+
+
+interface Report {
+  id: number,
+  type: string,            // e.g., "Job", "User", etc.
+  title: string,           // Display title
+  status: string,          // "pending", "resolved", etc.
+  reportedDate: string,    // In "YYYY-MM-DD" or similar format
+  jobId: number;
+  reason?: string;         // Optional reason for the report      
+}
+
+
+  type User = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  joinDate: string;
+};
+
+interface Job {
+  id: number;
+  title: string;
+  company_name: string;
+  status: string;
+  deadline: string;
+  postedDate: string;
+}
+
+
+useEffect(() => {
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch("http://localhost:5000/api/admin/stats", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      setStats({
+        totalUsers: data.totalUsers || 0,
+        activeJobs: data.activeJobs || 0,
+        applications: data.applications || 0,
+        pendingReports: data.pendingReports || 0,
+      });
+
+    } catch (err) {
+      console.error("Failed to fetch stats", err);
+    }
+  };
+
+  fetchStats();
+}, []);
+
+
+
+useEffect(() => {
+  const fetchReports = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      const res = await fetch("http://localhost:5000/api/admin/reports", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to fetch reports");
+
+      const data = await res.json();
+      setReports(data);
+    } catch (err) {
+      toast({
+        title: "Error loading reports",
+        description: String(err),
+        variant: "destructive",
+      });
+    }
+  };
+
+  fetchReports();
+}, []);
+
+
+const handleResolve = async (reportId: number) => {
+  try {
+    const token = localStorage.getItem("access_token");
+    const res = await fetch(`http://localhost:5000/api/admin/reports/${reportId}/resolve`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) throw new Error("Failed to resolve report");
+
+    toast({ title: "Report resolved successfully" });
+
+    // Refresh list
+    setReports((prev) =>
+      prev.map((r) =>
+        r.id === reportId ? { ...r, status: "resolved" } : r
+      )
+    );
+  } catch (err) {
+    toast({
+      title: "Error resolving report",
+      description: String(err),
+      variant: "destructive",
+    });
+  }
+};
+
+
+const handleDeleteJob = async (jobId: number) => {
+  if (!confirm("Are you sure you want to delete this job posting?")) return;
+
+  try {
+    const token = localStorage.getItem("access_token");
+
+    const response = await fetch(`http://localhost:5000/api/jobs/${jobId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to delete job");
+    }
+
+    setJobs((prev) => prev.filter((job) => job.id !== jobId));
+
+    toast({
+      title: "Job deleted",
+      description: `Job ID ${jobId} was successfully deleted.`,
+    });
+  } catch (error) {
+    toast({
+      title: "Error deleting job",
+      description: String(error),
+      variant: "destructive",
+    });
+  }
+};
+
+
+useEffect(() => {
+  const fetchJobs = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+
+      const response = await fetch("http://localhost:5000/api/admin/jobs", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch jobs");
+      }
+
+      const data = await response.json();
+      setJobs(data);
+    } catch (error) {
+      toast({
+        title: "Error loading jobs",
+        description: String(error),
+        variant: "destructive",
+      });
+    } finally {
+      setJobsLoading(false);
+    }
+  };
+
+  fetchJobs();
+}, [toast]);
+
+ useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        throw new Error("No access token found");
+      }
+
+      const response = await fetch("http://localhost:5000/api/admin/users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.msg || "Failed to fetch users");
+      }
+
+      const data = await response.json();
+      setUsers(data);
+    } catch (error) {
+      toast({
+        title: "Error loading users",
+        description: String(error),
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchUsers();
+}, [toast]);
+
   // Set page title
   useEffect(() => {
     document.title = "Admin Panel - JobHive";
@@ -42,34 +286,13 @@ const AdminPanel = () => {
     }
   }, [isAuthenticated, isRole, navigate, toast]);
 
-  // Mock data for the admin panel
-  const users = [
-    { id: 1, name: "John Doe", email: "john@example.com", role: "student", status: "active", joinDate: "2025-03-15" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com", role: "employer", status: "active", joinDate: "2025-02-20" },
-    { id: 3, name: "Alex Johnson", email: "alex@example.com", role: "student", status: "pending", joinDate: "2025-05-01" },
-    { id: 4, name: "Sarah Williams", email: "sarah@example.com", role: "employer", status: "inactive", joinDate: "2025-01-10" },
-    { id: 5, name: "Michael Brown", email: "michael@example.com", role: "student", status: "active", joinDate: "2025-04-05" }
-  ];
-
-  const jobs = [
-    { id: 1, title: "Frontend Developer", company: "TechCorp", status: "approved", postedDate: "2025-04-25" },
-    { id: 2, title: "Data Analyst", company: "AnalyticsPro", status: "pending", postedDate: "2025-05-02" },
-    { id: 3, title: "UX Designer", company: "DesignHub", status: "approved", postedDate: "2025-04-18" },
-    { id: 4, title: "Marketing Specialist", company: "GrowthGenius", status: "rejected", postedDate: "2025-05-03" },
-    { id: 5, title: "Software Engineer", company: "CodeMasters", status: "approved", postedDate: "2025-04-30" }
-  ];
-
-  const reports = [
-    { id: 1, type: "Job", title: "Suspicious Job Listing", status: "pending", reportedDate: "2025-05-04" },
-    { id: 2, type: "User", title: "Inappropriate Behavior", status: "resolved", reportedDate: "2025-05-01" },
-    { id: 3, type: "Content", title: "Copyright Violation", status: "investigating", reportedDate: "2025-05-03" }
-  ];
-
   // Filter function for search
-  const filteredUsers = users.filter(user => 
-    user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter((user: User) =>
+  user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  user.email.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+
 
   // If not authenticated, show login prompt
   if (!isAuthenticated) {
@@ -120,8 +343,8 @@ const AdminPanel = () => {
               <CardTitle className="text-xl">Total Users</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold mb-2">586</div>
-              <p className="text-sm text-gray-500">+12 this week</p>
+              <div className="text-3xl font-bold mb-2">{stats.totalUsers}</div>
+              {/* <p className="text-sm text-gray-500">+12 this week</p> */}
             </CardContent>
           </Card>
           
@@ -130,8 +353,8 @@ const AdminPanel = () => {
               <CardTitle className="text-xl">Active Jobs</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold mb-2">143</div>
-              <p className="text-sm text-gray-500">+8 this week</p>
+              <div className="text-3xl font-bold mb-2">{stats.activeJobs}</div>
+              {/* <p className="text-sm text-gray-500">+8 this week</p> */}
             </CardContent>
           </Card>
           
@@ -140,8 +363,8 @@ const AdminPanel = () => {
               <CardTitle className="text-xl">Applications</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold mb-2">872</div>
-              <p className="text-sm text-gray-500">+35 this week</p>
+              <div className="text-3xl font-bold mb-2">{stats.applications}</div>
+              {/* <p className="text-sm text-gray-500">+35 this week</p> */}
             </CardContent>
           </Card>
           
@@ -150,8 +373,8 @@ const AdminPanel = () => {
               <CardTitle className="text-xl">Pending Reports</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold mb-2">4</div>
-              <p className="text-sm text-gray-500">Requires attention</p>
+              <div className="text-3xl font-bold mb-2">{stats.pendingReports}</div>
+              {/* <p className="text-sm text-gray-500">Requires attention</p> */}
             </CardContent>
           </Card>
         </div>
@@ -162,8 +385,8 @@ const AdminPanel = () => {
             <TabsTrigger value="users" className="flex-1">Users</TabsTrigger>
             <TabsTrigger value="jobs" className="flex-1">Jobs</TabsTrigger>
             <TabsTrigger value="reports" className="flex-1">Reports</TabsTrigger>
-            <TabsTrigger value="analytics" className="flex-1">Analytics</TabsTrigger>
-            <TabsTrigger value="settings" className="flex-1">Settings</TabsTrigger>
+            {/* <TabsTrigger value="analytics" className="flex-1">Analytics</TabsTrigger> */}
+            {/* <TabsTrigger value="settings" className="flex-1">Settings</TabsTrigger> */}
           </TabsList>
           
           {/* Users Tab */}
@@ -182,12 +405,14 @@ const AdminPanel = () => {
                       <i className="fas fa-search"></i>
                     </div>
                   </div>
-                  <Button style={{ backgroundColor: "#F6C500", color: "#000000" }}>
+                  {/* <Button style={{ backgroundColor: "#F6C500", color: "#000000" }}>
                     Add New User
-                  </Button>
+                  </Button> */}
                 </div>
-                
-                <Table>
+                {loading ? (
+                    <p className="text-gray-500">Loading users...</p>
+                    ) : (
+                      <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>ID</TableHead>
@@ -196,19 +421,20 @@ const AdminPanel = () => {
                       <TableHead>Role</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Join Date</TableHead>
-                      <TableHead>Actions</TableHead>
+                      {/* <TableHead>Actions</TableHead> */}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.map((user) => (
+                    {(searchTerm ? filteredUsers : users).map((user) => (
                       <TableRow key={user.id}>
                         <TableCell>{user.id}</TableCell>
                         <TableCell>{user.name}</TableCell>
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
                           <Badge variant={user.role === 'admin' ? 'default' : 'outline'}>
-                            {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                            {formatText(user.role)}
                           </Badge>
+
                         </TableCell>
                         <TableCell>
                           <Badge 
@@ -218,22 +444,18 @@ const AdminPanel = () => {
                               'bg-red-100 text-red-800'
                             }
                           >
-                            {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
+                            {formatStatus(user.status)}
                           </Badge>
                         </TableCell>
                         <TableCell>{user.joinDate}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm">Edit</Button>
-                            <Button variant="outline" size="sm" className="text-red-500">Delete</Button>
-                          </div>
-                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-              </CardContent>
-            </Card>
+                    )}
+
+            </CardContent>
+          </Card>
           </TabsContent>
           
           {/* Jobs Tab */}
@@ -263,23 +485,40 @@ const AdminPanel = () => {
                       <TableRow key={job.id}>
                         <TableCell>{job.id}</TableCell>
                         <TableCell>{job.title}</TableCell>
-                        <TableCell>{job.company}</TableCell>
+                        <TableCell>{job.company_name}</TableCell>
                         <TableCell>
                           <Badge 
                             className={
-                              job.status === 'approved' ? 'bg-green-100 text-green-800' :
+                              job.status === 'active' ? 'bg-green-100 text-green-800' :
                               job.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
+                              job.status === 'expired' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
                             }
                           >
-                            {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                            {formatStatus(job.status)}
                           </Badge>
+
                         </TableCell>
-                        <TableCell>{job.postedDate}</TableCell>
+                        <TableCell>{formatDate(job.postedDate)}</TableCell>
                         <TableCell>
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm">View</Button>
-                            <Button variant="outline" size="sm">Edit</Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => navigate(`/jobs/${job.id}`)}
+                            >
+                              View
+                            </Button>
+
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-red-500"
+                                onClick={() => handleDeleteJob(job.id)}
+                              >
+                                Delete Post
+                              </Button>
+
                             {job.status === 'pending' && (
                               <Button 
                                 variant="outline" 
@@ -317,113 +556,77 @@ const AdminPanel = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {reports.map((report) => (
-                      <TableRow key={report.id}>
-                        <TableCell>{report.id}</TableCell>
-                        <TableCell>{report.type}</TableCell>
-                        <TableCell>{report.title}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            className={
-                              report.status === 'resolved' ? 'bg-green-100 text-green-800' :
-                              report.status === 'investigating' ? 'bg-blue-100 text-blue-800' :
-                              'bg-yellow-100 text-yellow-800'
-                            }
+                      {reports.map((report) => (
+                        <TableRow
+                            key={report.id}
+                            className="cursor-pointer hover:bg-gray-100 transition"
+                            onClick={() => navigate(`/jobs/${report.jobId}`)}
                           >
-                            {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{report.reportedDate}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm">Review</Button>
-                            {report.status !== 'resolved' && (
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                className="text-green-500"
-                              >
-                                Resolve
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
+                          <TableCell>{report.id}</TableCell>
+                          <TableCell>{report.type}</TableCell>
+                          <TableCell>{report.title}</TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                report.status === 'resolved'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-yellow-100 text-yellow-800'
+                              }
+                            >
+                              {formatStatus(report.status)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{formatDate(report.reportedDate)}</TableCell>
+                          <TableCell>
+                                <div className="flex flex-col gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedReportReason(report.reason ?? null);
+                                      setIsReasonModalOpen(true);
+                                    }}
+                                  >
+                                    View Reason
+                                  </Button>
+
+                                  {report.status !== 'resolved' && (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-green-500"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleResolve(report.id);
+                                      }}
+                                    >
+                                      Resolve
+                                    </Button>
+                                  )}
+                                </div>
+                              </TableCell>
+
+                        </TableRow>
+                      ))}
+                    </TableBody>
+
                 </Table>
               </CardContent>
             </Card>
-          </TabsContent>
-          
-          {/* Analytics Tab */}
-          <TabsContent value="analytics">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-6">Platform Analytics</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="h-64 bg-gray-100 rounded-md flex items-center justify-center">
-                    <p className="text-gray-500">User Growth Chart</p>
-                  </div>
-                  <div className="h-64 bg-gray-100 rounded-md flex items-center justify-center">
-                    <p className="text-gray-500">Job Postings Chart</p>
-                  </div>
-                  <div className="h-64 bg-gray-100 rounded-md flex items-center justify-center">
-                    <p className="text-gray-500">Application Success Rate</p>
-                  </div>
-                  <div className="h-64 bg-gray-100 rounded-md flex items-center justify-center">
-                    <p className="text-gray-500">Website Traffic</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Settings Tab */}
-          <TabsContent value="settings">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-xl font-bold mb-6">Platform Settings</h3>
-                
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="text-lg font-medium mb-3">General Settings</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="siteName">Site Name</Label>
-                        <Input id="siteName" defaultValue="JobHive" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="siteDescription">Site Description</Label>
-                        <Input id="siteDescription" defaultValue="Job Portal for Students and Fresh Graduates" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-lg font-medium mb-3">Email Settings</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="adminEmail">Admin Email</Label>
-                        <Input id="adminEmail" defaultValue="admin@jobhive.com" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="supportEmail">Support Email</Label>
-                        <Input id="supportEmail" defaultValue="support@jobhive.com" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 border-t">
-                    <Button style={{ backgroundColor: "#F6C500", color: "#000000" }}>
-                      Save Settings
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          </TabsContent>         
         </Tabs>
+         {isReasonModalOpen && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full">
+                  <h2 className="text-xl font-semibold mb-4">Report Reason</h2>
+                  <p className="text-gray-700 whitespace-pre-line">{selectedReportReason}</p>
+                  <div className="mt-6 text-right">
+                    <Button onClick={() => setIsReasonModalOpen(false)}>Close</Button>
+                  </div>
+                </div>
+              </div>
+            )}
       </div>
     </main>
   );

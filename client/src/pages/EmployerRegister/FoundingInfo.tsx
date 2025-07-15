@@ -31,10 +31,41 @@ const FoundingInfo = () => {
     { icon: <i className="fas fa-phone"></i>, label: "Contact" },
   ];
 
-  const handleNext = (e: React.FormEvent) => {
-    e.preventDefault();
-    navigate('/register/employer/social-media');
-  };
+  const handleNext = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const storedUser = localStorage.getItem("jobhive_user");
+  const userId = storedUser ? JSON.parse(storedUser).id : null;
+
+  if (!userId) {
+    alert("User ID not found. Are you logged in?");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:5000/api/employer/founding-info", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        founded_year: foundedYear,
+        employees,
+        funding,
+        industry,
+      }),
+    });
+
+    if (!res.ok) throw new Error("Failed to save founding info");
+
+    navigate("/register/employer/social-media");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to save founding info. Please try again.");
+  }
+};
+
 
   const handlePrevious = () => {
     navigate('/register/employer');

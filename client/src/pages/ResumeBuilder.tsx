@@ -11,11 +11,7 @@ import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { 
-  ModernTemplate, 
-  MinimalTemplate, 
-  CreativeTemplate,
-  ProfessionalTemplate,
-  AcademicTemplate,
+  ATSTemplate,
   availableTemplates, 
   type ResumeData, 
   type Education,
@@ -47,33 +43,108 @@ const ResumeBuilder = () => {
   const [, navigate] = useLocation();
   const previewRef = useRef<HTMLDivElement>(null);
   
+  
   // Resume data state
   const [resumeData, setResumeData] = useState<ResumeData>(emptyResumeData);
   const [activeTab, setActiveTab] = useState("personal");
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>('modern');
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>('ats');
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  
+const handleSaveResumeToServer = async () => {
+  try {
+    setIsGeneratingPDF(true);
+
+    toast({
+      title: "Saving Resume...",
+      description: "Please wait while we generate and save your resume.",
+    });
+
+    // 1. Generate PDF blob
+    const blob = await generatePDF("resume-to-print", "resume.pdf", true);
+    if (!(blob instanceof Blob)) throw new Error("Invalid PDF blob");
+
+    // 2. Upload to server to get public URL
+    const formData = new FormData();
+    formData.append("file", blob, "resume.pdf");
+
+    const uploadRes = await fetch("http://localhost:5000/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const { url: pdfUrl } = await uploadRes.json();
+    if (!pdfUrl) throw new Error("Upload failed, no URL returned");
+
+    // ✅ 3. Save full resume data + cv_url
+    const token = localStorage.getItem("access_token");
+    const saveRes = await fetch("http://localhost:5000/api/resume/save", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        ...resumeData,  // all resume fields
+        cv_url: pdfUrl, // add generated PDF URL
+      }),
+    });
+
+    if (!saveRes.ok) {
+      const errorData = await saveRes.json();
+      throw new Error(errorData?.message || "Resume save failed");
+    }
+
+    toast({
+      title: "Resume Saved",
+      description: "Your resume was uploaded and saved successfully.",
+    });
+
+  } catch (err) {
+    console.error("Error saving resume:", err);
+    toast({
+      title: "Error",
+      description: "Could not save resume. Please try again.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsGeneratingPDF(false);
+  }
+};
+
+
+
+
 
   // Set page title and load saved data if available
   useEffect(() => {
-    document.title = "Resume Builder - JobHive";
-    
-    // Load saved resume data
-    const savedData = getResumeData();
-    if (savedData) {
-      setResumeData(savedData);
+  document.title = "Resume Builder - JobHive";
+  
+  // Async function to load data
+  const loadData = async () => {
+    try {
+      // Load saved resume data
+      const savedData = await getResumeData();
+      if (savedData) {
+        setResumeData(savedData);
+      }
+      
+      // Load saved template choice
+      const savedTemplate = getTemplateChoice() as TemplateType;
+      if (savedTemplate) {
+        setSelectedTemplate(savedTemplate);
+      }
+    } catch (error) {
+      console.error("Error loading saved data:", error);
     }
-    
-    // Load saved template choice
-    const savedTemplate = getTemplateChoice() as TemplateType;
-    if (savedTemplate) {
-      setSelectedTemplate(savedTemplate);
-    }
-  }, []);
+  };
+
+  loadData();
+}, []);
 
   // Check if user is authenticated and has student role
   useEffect(() => {
     if (isAuthenticated) {
-      if (!isRole('student')) {
+      if (!isRole('job_seeker')) {
         toast({
           title: "Access Restricted",
           description: "Resume Builder is only available to student accounts.",
@@ -393,49 +464,7 @@ const ResumeBuilder = () => {
             Our resume builder is designed specifically for students and fresh graduates.
             Highlight your skills, education, and projects in a professional format that stands out to employers.
           </p>
-          
-          {/* Template Selection Section */}
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold mb-3 text-center">Choose a Template</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto mb-8 text-center">
-              Select a resume template that best matches your personality and career goals. 
-              Each template is designed to highlight different aspects of your professional profile.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {availableTemplates.map((template) => (
-                <div 
-                  key={template.id}
-                  className={`border-2 rounded-lg p-4 cursor-pointer hover:shadow-lg transition-all transform hover:-translate-y-1 ${
-                    selectedTemplate === template.id 
-                      ? 'border-[#F6C500] bg-[#FFFBEA]' 
-                      : 'border-gray-200 hover:border-[#F6C500]'
-                  }`}
-                  onClick={() => handleTemplateSelection(template.id as TemplateType)}
-                >
-                  <div className="bg-white shadow rounded-lg overflow-hidden aspect-[8.5/11] mb-4">
-                    <img 
-                      src={template.imageUrl} 
-                      alt={`${template.name} Resume Template`} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="text-lg font-semibold text-center mb-2">{template.name}</h3>
-                  <p className="text-sm text-gray-600 text-center">{template.description}</p>
-                  
-                  {selectedTemplate === template.id && (
-                    <div className="mt-3 text-center">
-                      <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-medium bg-[#F6C500] text-black rounded-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        Selected
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
+
         </div>
 
         <Card className="mb-10 fade-in-up animate-delay-100">
@@ -491,7 +520,7 @@ const ResumeBuilder = () => {
                       id="phone" 
                       value={resumeData.phone}
                       onChange={handlePersonalInfoChange}
-                      placeholder="+1 234 567 8900" 
+                      placeholder="+962 777777777" 
                     />
                   </div>
                   <div className="space-y-2 md:col-span-2">
@@ -789,10 +818,12 @@ const ResumeBuilder = () => {
               
               {/* Preview Tab */}
               <TabsContent value="preview" className="mt-4">
+                
                 <h2 className="text-2xl font-bold mb-4">Resume Preview</h2>
                 <p className="mb-6 text-gray-600">
                   Preview your resume and make any final adjustments before downloading.
                 </p>
+                
                 
                 <div ref={previewRef} className="bg-gray-100 p-8 border rounded-lg mb-6 overflow-auto max-h-[800px]">
                   <div 
@@ -808,21 +839,23 @@ const ResumeBuilder = () => {
                     }}
                   >
                     {/* Display the selected template with resume data */}
-                    {selectedTemplate === 'modern' && <ModernTemplate data={resumeData} />}
-                    {selectedTemplate === 'minimal' && <MinimalTemplate data={resumeData} />}
-                    {selectedTemplate === 'creative' && <CreativeTemplate data={resumeData} />}
-                    {selectedTemplate === 'professional' && <ProfessionalTemplate data={resumeData} />}
-                    {selectedTemplate === 'academic' && <AcademicTemplate data={resumeData} />}
+                    <ATSTemplate data={resumeData} />
+
+                    
                   </div>
                 </div>
                 
-                <div className="mt-6 flex justify-between">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setActiveTab("skills")}
-                  >
-                    Previous: Skills
-                  </Button>
+                <div className="mt-6 flex justify-between items-center">
+  {/* Left-aligned button */}
+                <Button 
+                  variant="outline"
+                  onClick={() => setActiveTab("skills")}
+                >
+                  Previous: Skills
+                </Button>
+
+                {/* Right-aligned buttons */}
+                <div className="flex gap-4">
                   <Button 
                     disabled={isGeneratingPDF}
                     style={{ backgroundColor: "#F6C500", color: "#000000" }}
@@ -830,7 +863,16 @@ const ResumeBuilder = () => {
                   >
                     {isGeneratingPDF ? 'Generating PDF...' : 'Download PDF'}
                   </Button>
+                  <Button 
+                    onClick={handleSaveResumeToServer} 
+                    className="bg-yellow-400 hover:bg-yellow-500 text-black"
+                    disabled={isGeneratingPDF}
+                  >
+                    {isGeneratingPDF ? "Saving..." : "Save Resume"}
+                  </Button>
                 </div>
+              </div>
+
               </TabsContent>
             </Tabs>
           </CardContent>

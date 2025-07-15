@@ -5,7 +5,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Link, useLocation } from 'wouter';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
-import logo from '@/assets/logo.svg';
 
 /**
  * Login Page Component
@@ -22,6 +21,7 @@ const Login = () => {
   const [, navigate] = useLocation();
   const { login, isAuthenticated } = useUser();
   const { toast } = useToast();
+  const { user } = useUser();
 
   // Set page title
   useEffect(() => {
@@ -35,53 +35,54 @@ const Login = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError(null);
-    
-    try {
-      // Attempt to log in with the provided credentials
-      const success = await login(email, password);
-      
-      if (success) {
-        // If login is successful, show toast and redirect to dashboard
-        toast({
-          title: "Login Successful",
-          description: "Welcome back to JobHive!",
-          variant: "default"
-        });
-        navigate('/dashboard');
-      } else {
-        // If login fails, show toast notification
-        setLoginError('Invalid email or password');
-        toast({
-          title: "Login Failed",
-          description: "Invalid email or password. Please try again.",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      setLoginError('An error occurred during login');
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoginError(null);
+
+  try {
+    const success = await login(email, password);
+
+    if (success) {
       toast({
-        title: "Error",
-        description: "An error occurred during login. Please try again.",
-        variant: "destructive"
+        title: "Login Successful",
+        description: "Welcome back to JobHive!",
+        variant: "default",
+      });
+
+      // Retrieve user from localStorage after login
+      const storedUser = localStorage.getItem("jobhive_user");
+      const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+
+      if (parsedUser?.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
+    } else {
+      setLoginError("Invalid email or password");
+      toast({
+        title: "Login Failed",
+        description: "Invalid email or password. Please try again.",
+        variant: "destructive",
       });
     }
-  };
+  } catch (error) {
+    console.error("Login error:", error);
+    setLoginError("An error occurred during login");
+    toast({
+      title: "Error",
+      description: "An error occurred during login. Please try again.",
+      variant: "destructive",
+    });
+  }
+};
+
 
   return (
     <div className="min-h-screen flex">
       {/* Left Section - Login Form */}
       <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 flex flex-col">
-        <div className="mb-8">
-          <Link href="/" className="flex items-center gap-2">
-            <img src={logo} alt="JobHive Logo" className="w-8 h-8" />
-            <span className="text-xl font-bold">JobHive</span>
-          </Link>
-        </div>
-
         <div className="flex-grow flex flex-col justify-center max-w-md mx-auto w-full">
           <h1 className="text-2xl font-bold mb-6">Sign in</h1>
           
@@ -153,13 +154,6 @@ const Login = () => {
                 Forgot password?
               </Link>
             </div>
-            
-            <div className="text-xs text-gray-500 mt-4 mb-4">
-              <p>For testing, use these credentials:</p>
-              <p>• student@jobhive.com / password123</p>
-              <p>• employer@jobhive.com / password123</p>
-              <p>• admin@jobhive.com / password123</p>
-            </div>
 
             <Button
               type="submit"
@@ -169,61 +163,46 @@ const Login = () => {
               GET STARTED <i className="fas fa-arrow-right ml-2"></i>
             </Button>
           </form>
-
-          <div className="my-6 flex items-center">
-            <div className="flex-grow border-t border-gray-200"></div>
-            <span className="mx-4 text-sm text-gray-400">or</span>
-            <div className="flex-grow border-t border-gray-200"></div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="h-12">
-              <i className="fab fa-facebook-f mr-2 text-blue-600"></i> Sign in with Facebook
-            </Button>
-            <Button variant="outline" className="h-12">
-              <i className="fab fa-google mr-2 text-red-500"></i> Sign in with Google
-            </Button>
-          </div>
         </div>
       </div>
 
       {/* Right Section - Statistics and Image */}
-      <div className="hidden md:flex md:w-1/2 bg-[#F5F7FF] p-12 lg:p-16 flex-col">
+      <div className="hidden md:flex md:w-2/5 bg-[#F5F7FF] p-8 lg:p-12 flex-col">
         <div className="flex-grow flex flex-col justify-center items-center">
-          <div className="max-w-md">
-            <h2 className="text-2xl font-bold mb-12">
+          <div className="max-w-sm">
+            <h2 className="text-xl font-bold mb-8">
               Over 1,75,324 candidates waiting for good employees.
             </h2>
 
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="bg-white p-4 rounded-md flex flex-col items-center">
-                <div className="w-10 h-10 bg-[#F5F7FF] rounded-md flex items-center justify-center mb-2">
-                  <i className="fas fa-briefcase text-gray-600"></i>
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="bg-white p-3 rounded-md flex flex-col items-center">
+                <div className="w-8 h-8 bg-[#F5F7FF] rounded-md flex items-center justify-center mb-1">
+                  <i className="fas fa-briefcase text-gray-600 text-sm"></i>
                 </div>
-                <div className="font-bold">1,75,324</div>
+                <div className="font-bold text-sm">1,75,324</div>
                 <div className="text-xs text-gray-500">Live Jobs</div>
               </div>
-              <div className="bg-white p-4 rounded-md flex flex-col items-center">
-                <div className="w-10 h-10 bg-[#F5F7FF] rounded-md flex items-center justify-center mb-2">
-                  <i className="fas fa-building text-gray-600"></i>
+              <div className="bg-white p-3 rounded-md flex flex-col items-center">
+                <div className="w-8 h-8 bg-[#F5F7FF] rounded-md flex items-center justify-center mb-1">
+                  <i className="fas fa-building text-gray-600 text-sm"></i>
                 </div>
-                <div className="font-bold">97,354</div>
+                <div className="font-bold text-sm">97,354</div>
                 <div className="text-xs text-gray-500">Companies</div>
               </div>
-              <div className="bg-white p-4 rounded-md flex flex-col items-center">
-                <div className="w-10 h-10 bg-[#F5F7FF] rounded-md flex items-center justify-center mb-2">
-                  <i className="fas fa-briefcase text-gray-600"></i>
+              <div className="bg-white p-3 rounded-md flex flex-col items-center">
+                <div className="w-8 h-8 bg-[#F5F7FF] rounded-md flex items-center justify-center mb-1">
+                  <i className="fas fa-briefcase text-gray-600 text-sm"></i>
                 </div>
-                <div className="font-bold">7,532</div>
+                <div className="font-bold text-sm">7,532</div>
                 <div className="text-xs text-gray-500">New Jobs</div>
               </div>
             </div>
 
-            <div className="mt-8">
-              <img 
-                src="https://cdn.pixabay.com/photo/2018/07/26/09/56/people-3563028_1280.png" 
+            <div className="mt-6">
+              <img
+                src = "/src/assets/login.png" 
                 alt="People collaborating" 
-                className="w-full"
+                className="w-3/4 mx-auto"
               />
             </div>
           </div>
